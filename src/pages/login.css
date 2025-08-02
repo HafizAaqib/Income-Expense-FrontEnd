@@ -1,0 +1,18 @@
+.login-wrapper {
+  height: 100vh;
+  background: linear-gradient(to bottom right, #a8e063, #56ab2f); /* Parrot green gradient */
+}
+
+.login-box {
+  width: 100%;
+  max-width: 310px;
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.login-box h2 {
+  color: #28a745; /* Bootstrap success green */
+  font-weight: 700;
+}

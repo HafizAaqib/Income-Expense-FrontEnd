@@ -1,0 +1,59 @@
+
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(1) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .transaction-table-wrapper {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+  }
+}
+
+.description-column {
+  max-width: 200px;
+}
+
+@media (max-width: 768px) {
+  .ant-form-item {
+    flex-direction: row !important;
+    align-items: center;
+  }
+
+  .ant-form-item-label {
+    flex: 0 0 30% !important;
+    max-width: 30% !important;
+    text-align: left;
+  }
+
+  .ant-form-item-control {
+    flex: 1 0 70% !important;
+    max-width: 70% !important;
+  }
+}

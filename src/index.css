@@ -1,0 +1,55 @@
+@font-face {
+  font-family: 'NotoNastaliqUrdu';
+  src: url('/src/assets/fonts/NotoNastaliqUrdu-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+input, textarea, select {
+  font-family: 'NotoNastaliqUrdu' !important;
+}
+
+
+
+/* we can also add/ change style in bootstrap classes like this */
+
+/* abhi bg-body-tertiary class lgi is liy color change nai ho ra */
+/* .navbar{
+  background-color: rgb(86, 59, 23) !important;
+} */
+
+
+
+
+/* expenses */
+.filters{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  box-shadow: 0 0 3px gray;
+}
+
+
+/* antd icons */
+/* .anticon svg{ */
+.ant-icon{
+  font-size: 20px;
+  cursor: pointer;
+}
+.active-icons{
+  color: black;
+}
+.inactive-icons{
+  color: gray;
+}
+.switch-icons{
+  border: 1px solid rgba(0, 0, 0, 0.658);
+  border-radius: 5px;
+  padding: 10px 15px;
+}

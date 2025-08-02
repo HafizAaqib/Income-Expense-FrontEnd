@@ -1,0 +1,15 @@
+.contact-card {
+  /* background: linear-gradient(to bottom right, #a8e063, #56ab2f0f); */
+  border-radius: 1rem;
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contact-list a:hover {
+  text-decoration: underline;
+}
+
+.phoneIcons{
+    font-size: 22px;
+}
