@@ -1,5 +1,5 @@
 {
-  "proxy": "http://localhost:8080/api/v1",
+  "proxy": "https://income-expense-backend.on.shiper.app/api/v1",
   "name": "incomeexpensefrontend",
   "private": true,
   "version": "0.0.0",
