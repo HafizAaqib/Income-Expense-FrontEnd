@@ -14,7 +14,9 @@ const Categories = ({ type }) => {
   const getCategories = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`/api/v1/categories?type=${type}`);
+      const API = import.meta.env.VITE_API_BASE_URL;
+
+      const res = await axios.get(`${API}/categories?type=${type}`);
       setCategories(res.data.categories);
     } catch (err) {
       messageApi.error('Failed to fetch categories.');
@@ -29,7 +31,9 @@ const Categories = ({ type }) => {
   const handleAdd = async () => {
     if (!newCategory.trim()) return;
     try {
-      await axios.post('/api/v1/categories', { name: newCategory.trim(), type });
+      const API = import.meta.env.VITE_API_BASE_URL;
+
+      await axios.post(`${API}/categories`, { name: newCategory.trim(), type });
       setNewCategory('');
       getCategories();
       messageApi.success('Category added');
@@ -40,7 +44,8 @@ const Categories = ({ type }) => {
 
   const handleEdit = async (id) => {
     try {
-      await axios.put(`/api/v1/categories/${id}`, { name: editText });
+      const API = import.meta.env.VITE_API_BASE_URL;
+      await axios.put(`${API}/categories/${id}`, { name: editText });
       setEditingId(null);
       messageApi.success('Category updated');
       getCategories();
@@ -51,7 +56,8 @@ const Categories = ({ type }) => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/v1/categories/${id}`);
+      const API = import.meta.env.VITE_API_BASE_URL;
+      await axios.delete(`${API}/categories/${id}`);
       messageApi.success('Deleted');
       getCategories();
     } catch {
@@ -130,7 +136,7 @@ const Categories = ({ type }) => {
     },
   ];
 
-   const savedUser = JSON.parse(localStorage.getItem('user'));
+   const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
   const isAdmin = savedUser?.isAdmin;
 
   return (

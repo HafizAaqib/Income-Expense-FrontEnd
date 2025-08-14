@@ -16,7 +16,9 @@ const Dashboard = () => {
   const pieColors = ['#00C49F', '#FF8042', '#0088FE', '#FFBB28', '#FF6666'];
 
   const fetchDashboardData = async () => {
-    const { data } = await axios.get(`/api/v1/transactions/dashboard-summary?month=${selectedMonth}&year=${selectedYear}`);
+    const API = import.meta.env.VITE_API_BASE_URL;
+
+    const { data } = await axios.get(`${API}/transactions/dashboard-summary?month=${selectedMonth}&year=${selectedYear}`);
     if (data.success) {
       setSummary(data.data.summary);
       setIncomeData(data.data.incomeByCategory);

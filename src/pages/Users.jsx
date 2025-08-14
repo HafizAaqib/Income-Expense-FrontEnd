@@ -26,7 +26,8 @@ const Users = () => {
     const getUsers = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('/api/v1/users/getAllUsers'); // adjust path as needed
+            const API = import.meta.env.VITE_API_BASE_URL;
+            const res = await axios.get(`${API}/users/getAllUsers`); 
             setUsers(res.data.users);
         } catch (err) {
             messageApi.error('Failed to fetch users.');
@@ -57,7 +58,8 @@ const Users = () => {
 
     const handleDelete = async (userId) => {
         try {
-            await axios.delete(`/api/v1/users/${userId}`);
+            const API = import.meta.env.VITE_API_BASE_URL;
+            await axios.delete(`${API}/users/${userId}`);
             messageApi.success('User deleted successfully');
             getUsers();
         } catch {
@@ -69,13 +71,15 @@ const Users = () => {
         console.log("Form values:", values);
         try {
             if (editMode) {
-                await axios.put(`/api/v1/users/${editingUser._id}`, values);
+                const API = import.meta.env.VITE_API_BASE_URL;
+                await axios.put(`${API}/users/${editingUser._id}`, values);
                 if(passwordEditMode)
                     messageApi.success('Password updated successfully');
                 else
                     messageApi.success('User updated successfully');
             } else {
-                await axios.post('/api/v1/users/createUser', values);
+                const API = import.meta.env.VITE_API_BASE_URL;
+                await axios.post(`${API}/users/createUser`, values);
                 messageApi.success('User created successfully');
             }
             setIsModalOpen(false);
@@ -87,13 +91,13 @@ const Users = () => {
 
     const columns = [
         {
-            title: 'Login ID',
+            title: 'User Name',
             align: 'center',
             dataIndex: 'name',
             responsive: ['md'], // ❌ hides in xs/sm, ✅ shows in md+
         },
         {
-            title: 'User Name',
+            title: 'Login ID',
             align: 'center',
             dataIndex: 'userName',
         },
@@ -207,10 +211,10 @@ const Users = () => {
                     {(!editMode || !passwordEditMode) && (
                         <>
 
-                            <Form.Item name="name" label="Login ID" rules={[{ required: true }]}>
+                            <Form.Item name="name" label="User Name" rules={[{ required: true }]}>
                                 <Input />
                             </Form.Item>
-                            <Form.Item name="userName" label="User Name" rules={[{ required: true }]}>
+                            <Form.Item name="userName" label="Login ID" rules={[{ required: true }]}>
                                 <Input />
                             </Form.Item>
 
@@ -243,10 +247,10 @@ const Users = () => {
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 18 }}
                     style={{ maxWidth: '100%' }} initialValues={viewUser}>
-                    <Form.Item label="Login ID">
+                    <Form.Item label="User Name">
                         <Input value={viewUser?.name} />
                     </Form.Item>
-                    <Form.Item label="Username">
+                    <Form.Item label="Login ID">
                         <Input value={viewUser?.userName} />
                     </Form.Item>
                     <Form.Item label="Is Admin?">

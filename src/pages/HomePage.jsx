@@ -66,7 +66,8 @@ const HomePage = () => {
         const getAllExpenses = async () => {
             try {
                 setLoading(true);
-                const res = await axios.post('/api/v1/expenses/get-Expenses', { frequency, selectedDate, type });
+                const API = import.meta.env.VITE_API_BASE_URL;
+                const res = await axios.post(`${API}/expenses/get-Expenses`, { frequency, selectedDate, type });
                 setAllExpenses(res.data);
                 setLoading(false);
             } catch (error) {
@@ -83,7 +84,8 @@ const HomePage = () => {
         try {
             setLoading(true);
             if (editable) {
-                await axios.post('/api/v1/expenses/edit-Expense', {
+                const API = import.meta.env.VITE_API_BASE_URL;
+                await axios.post(`${API}/expenses/edit-Expense`, {
                     payload: {
                         ...values,
                         expenseId: editable._id
@@ -92,7 +94,8 @@ const HomePage = () => {
                 setLoading(false);
                 messageApi.success('Expense Update');
             } else {
-                await axios.post('/api/v1/expenses/add-Expense', values);
+                const API = import.meta.env.VITE_API_BASE_URL;
+                await axios.post(`${API}/expenses/add-Expense`, values);
                 setLoading(false);
                 messageApi.success('Expense Added');
             }
@@ -107,7 +110,8 @@ const HomePage = () => {
     const handleDelete = async (record) => {
         try {
             setLoading(true);
-            await axios.post('/api/v1/expenses/delete-Expense', { expenseId: record._id })
+            const API = import.meta.env.VITE_API_BASE_URL;
+            await axios.post(`${API}/expenses/delete-Expense`, { expenseId: record._id })
             setLoading(false);
             message.success('Expense Deleted')
         } catch (error) {

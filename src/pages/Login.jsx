@@ -16,25 +16,37 @@ const Login = () => {
 
   const SubmitHandler = async (values) => {
     try {
-      setLoading(true);
-      const { data } = await axios.post('/api/v1/users/login', values)
-      setLoading(false);
-      messageApi.success('Login Succesfully.')
-      // localStorage.setItem('user', JSON.stringify({ ...data.user, password: '' }))
-      localStorage.setItem('user', JSON.stringify(data.user))
-      navigate('/')
-    } catch (error) {
-      console.log(error.response.data);
-      setLoading(false);
-      messageApi.error('User Name or password is not correct');
-    }
+  setLoading(true);
+  const API = import.meta.env.VITE_API_BASE_URL;
+  const { data } = await axios.post(`${API}/users/login`, values);
+
+  setLoading(false);
+  messageApi.success('Login Successfully.');
+
+  localStorage.setItem('user', JSON.stringify(data.user));
+  navigate('/');
+} catch (error) {
+  setLoading(false);
+  
+  console.error('Login Error:', error.response?.data || error.message);
+
+  if (error.response?.data) {
+    messageApi.error(error.response.data); // e.g. "Login ID or Password is not correct"
+  } else {
+    messageApi.error('Login failed. Please try again.');
+  }
+}
+
   }
 
   // Prevent for login user
   useEffect(() => {
-    if (localStorage.getItem('user')) {
-      navigate('/');
-    }
+    const storedUser = localStorage.getItem('user');
+const user = storedUser ? JSON.parse(storedUser) : null;
+
+if (user) {
+  navigate('/');
+}
   }, [navigate]);
 
   return (

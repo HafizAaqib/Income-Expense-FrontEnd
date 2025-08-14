@@ -12,7 +12,15 @@ import Categories from './pages/Categories'
 import Transactions from './pages/Transactions'
 
 function App() {
-  const savedUser = JSON.parse(localStorage.getItem('user'));
+  let savedUser =  'null';
+  try{
+    savedUser = JSON.parse(localStorage.getItem('user'))
+  }
+    catch(err){
+      localStorage.removeItem('user')
+      savedUser =  'null'
+    
+  }
   const isAdmin = savedUser?.isAdmin;
   console.log(savedUser);
   console.log(isAdmin);
@@ -33,7 +41,7 @@ function App() {
                 <div className="flex-grow-1 p-3">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
-                    {isAdmin && <Route path="/users" element={<Users />} />}
+<Route path="/users" element={<ProtectedAdminRoute><Users /></ProtectedAdminRoute>} />
                     <Route path="/income-categories" element={<Categories type="income" />} />
                     <Route path="/expense-categories" element={<Categories type="expense" />} />
                     <Route path="/income" element={<Transactions type="income" />} />
@@ -55,11 +63,36 @@ function App() {
 }
 
 export function ProtectedRoutes(props) {
-  if (localStorage.getItem('user')) {
-    return props.children
-  } else {
-    return <Navigate to='/login' />
-  }
+  const userStr = localStorage.getItem('user');
+let user = null;
+
+try {
+  user = JSON.parse(userStr);
+} catch (error) {
+  user = null; // in case of malformed JSON
 }
+
+if (user && user.userName && user._id) {
+  return props.children;
+} else {
+  return <Navigate to='/login' />;
+}
+}
+
+export function ProtectedAdminRoute ({ children }) {
+ const userStr = localStorage.getItem('user');
+let user = null;
+
+try {
+  user = JSON.parse(userStr);
+} catch (error) {
+  user = null; // in case of malformed JSON
+} 
+  if (!user || !user.isAdmin) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
 
 export default App
