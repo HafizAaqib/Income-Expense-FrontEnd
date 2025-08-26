@@ -56,4 +56,10 @@
     flex: 1 0 70% !important;
     max-width: 70% !important;
   }
+
+
+:where(.css-dev-only-do-not-override-pjilya).ant-card .ant-card-body {
+text-align: center; padding-left: 3px; padding-right: 3px;
 }
+}
+

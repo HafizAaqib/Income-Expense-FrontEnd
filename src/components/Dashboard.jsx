@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Select, Row, Col, Progress, Statistic, Segmented, Button, Space } from 'antd';
+import { Card, Table, Select, Row, Col, Progress, Statistic, Segmented, Button, Space } from 'antd';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -13,16 +13,27 @@ const Dashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs().month() + 1);
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
 
+  const [topIncome, setTopIncome] = useState([]);
+  const [topExpense, setTopExpense] = useState([]);
+
+
   const pieColors = ['#00C49F', '#FF8042', '#0088FE', '#FFBB28', '#FF6666'];
 
   const fetchDashboardData = async () => {
     const API = import.meta.env.VITE_API_BASE_URL;
 
-    const { data } = await axios.get(`${API}/transactions/dashboard-summary?month=${selectedMonth}&year=${selectedYear}`);
+    const { data } = await axios.get(`${API}/transactions/dashboard-summary?month=${selectedMonth}&year=${selectedYear}`, {
+      headers: {
+        "X-Client": window.location.hostname.split(".")[0],
+      },
+    });
     if (data.success) {
       setSummary(data.data.summary);
       setIncomeData(data.data.incomeByCategory);
       setExpenseData(data.data.expenseByCategory);
+
+      setTopIncome(data.data.topIncome || []);
+      setTopExpense(data.data.topExpense || []);
     }
   };
 
@@ -69,15 +80,11 @@ const Dashboard = () => {
   return (
     <div>
       {/* Filters Section */}
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 , display: 'flex' , 
-    'align-items' : 'center' , 'justify-content' : 'space-around' }}>
-        
-      
+      <Row justify="space-between" align="middle" style={{
+        marginBottom: 24, display: 'flex',
+        'align-items': 'center', 'justify-content': 'space-around'
+      }}>
 
-        {/* make <Space size="small"> because these are goimg out of screen on mobile .  also 
- background: 'linear-gradient(to bottom right, #a8e063, #56ab2f )
-for income expense selecter , also Income/ Expense with capital I/E , also buttons should be very good on mobile view (center align) */}
-        
         <Col>
           <Space size="small">
             <Button shape="circle" icon={<LeftOutlined />} size="large" onClick={() => changeMonth(-1)} />
@@ -94,7 +101,7 @@ for income expense selecter , also Income/ Expense with capital I/E , also butto
             <Select
               value={selectedYear}
               onChange={setSelectedYear}
-              options={[2024, 2025, 2026 , 2027 , 2028 , 2029 , 2030 , 2031 , 2032 , 2033 , 2034 , 2035].map(y => ({ label: y, value: y }))}
+              options={[2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035].map(y => ({ label: y, value: y }))}
               size="large"
             />
             <Button shape="circle" icon={<RightOutlined />} size="large" onClick={() => changeMonth(1)} />
@@ -106,32 +113,46 @@ for income expense selecter , also Income/ Expense with capital I/E , also butto
             options={['Income', 'Expense']}
             value={selectedType}
             onChange={setSelectedType}
-            size="large"
-            style={{ fontWeight: 'normal', padding: '6px 12px' , margin: '6px 12px'  , 
-              background: 'linear-gradient(to bottom right, #a8e063, #64b53eff )' 
-             }}
+            size="mediam"
+            style={{
+              fontWeight: 'normal', padding: '6px 12px', margin: '6px 12px',
+              background: 'linear-gradient(to bottom right, #029bd2, #20c997 )'
+            }}
           />
-        </Col>  
+        </Col>
       </Row>
 
       {/* Summary Cards */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={16} style={{ marginBottom: 24 }} align="stretch">
         <Col span={8}>
-          <Card>
-            <Statistic title="🟢 Total Income" value={summary.incomeTotal} valueStyle={{ color: 'green' }} />
+          <Card style={{ height: '100%' }}>
+            <Statistic
+              title="🟢 Total Income"
+              value={summary.incomeTotal}
+              valueStyle={{ color: 'green' }}
+            />
           </Card>
         </Col>
         <Col span={8}>
-          <Card>
-            <Statistic title="🔴 Total Expense" value={summary.expenseTotal} valueStyle={{ color: 'red' }} />
+          <Card style={{ height: '100%' }}>
+            <Statistic
+              title="🔴 Total Expense"
+              value={summary.expenseTotal}
+              valueStyle={{ color: 'red' }}
+            />
           </Card>
         </Col>
         <Col span={8}>
-          <Card>
-            <Statistic title="🔵 Balance" value={summary.balance} valueStyle={{ color: summary.balance >= 0 ? 'blue' : 'orange' }} />
+          <Card style={{ height: '100%' }}>
+            <Statistic
+              title="🔵 Balance"
+              value={summary.balance}
+              valueStyle={{ color: summary.balance >= 0 ? 'blue' : 'orange' }}
+            />
           </Card>
         </Col>
       </Row>
+
 
       {/* Charts */}
       <Row gutter={16}>
@@ -163,6 +184,94 @@ for income expense selecter , also Income/ Expense with capital I/E , also butto
           </Card>
         </Col>
       </Row>
+      {/* Top 5 Transactions */}
+      <Row gutter={16} style={{ marginTop: 24 }}>
+        <Col span={24}>
+          <Card
+            title={`Top ${selectedType === 'Income' ? 'Donations / Income' : 'Expenses'} (${dayjs().month(selectedMonth - 1).format('MMMM')} ${selectedYear})`}
+          >
+            <Table
+              dataSource={selectedType === 'Income' ? topIncome : topExpense}
+              rowKey={(record, idx) => record.receiptNumber || idx}
+              pagination={false}
+              size="small"
+              columns={[
+                {
+                  title: 'Receipt #',
+                  dataIndex: 'receiptNumber',
+                  key: 'receiptNumber',
+                  align: 'center',
+                  responsive: ['md'], // only show on medium and up
+                },
+                {
+                  title: selectedType === 'Income' ? 'Donor Name' : 'Name',
+                  dataIndex: 'reference',
+                  key: 'reference',
+                  align: 'center',
+                  onCell: () => ({
+                    style: {
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      textAlign: 'center',
+                    },
+                  }),
+                },
+                {
+                  title: 'Phone #',
+                  dataIndex: 'phoneNumber',
+                  key: 'phoneNumber',
+                  align: 'center',
+                  responsive: ['md'],
+                },
+                {
+                  title: 'Amount',
+                  dataIndex: 'amount',
+                  align: 'center',
+                  key: 'amount',
+                  render: (amt) => (
+                    <span style={{ color: selectedType === 'Income' ? 'green' : 'orange' }}>
+                      {amt.toLocaleString()} PKR
+                    </span>
+                  ),
+                },
+                {
+                  title: 'Category',
+                  dataIndex: 'category',
+                  key: 'category',
+                  align: 'center',
+                  responsive: ['md'],
+                },
+                {
+                  title: 'Date',
+                  dataIndex: 'date',
+                  align: 'center',
+                  key: 'date',
+                  render: (d) => dayjs(d).format('DD MMM YYYY'),
+                },
+                {
+                  title: 'Description',
+                  dataIndex: 'description',
+                  key: 'description',
+                  responsive: ['md'],
+                  align: 'center',
+                  onCell: () => ({
+                    style: {
+                      maxWidth: 200,        // <-- set your preferred width
+                      whiteSpace: 'normal', // allow wrapping
+                      wordBreak: 'break-word',
+                      textAlign: 'center',
+                    },
+                  }),
+                }
+
+              ]}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+
+
     </div>
   );
 };
