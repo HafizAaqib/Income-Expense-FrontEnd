@@ -11,15 +11,22 @@ const Categories = ({ type }) => {
   const [editText, setEditText] = useState('');
   const [messageApi, msgContextHolder] = message.useMessage();
 
-  const getCategories = async () => {
+  const selectedEntity = JSON.parse(localStorage.getItem('selectedEntity') || 'null');
+
+const getCategories = async () => {
     setLoading(true);
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
-      const res = await axios.get(`${API}/categories?type=${type}`, {
-  headers: {
-    "X-Client": window.location.hostname.split(".")[0],
-  },
-});
+      let url = `${API}/categories?type=${type}`;
+      if (selectedEntity) {
+        url += `&entity=${selectedEntity.EntityId}`;
+      }
+
+      const res = await axios.get(url, {
+        headers: {
+          "X-Client": window.location.hostname.split(".")[0],
+        },
+      });
       setCategories(res.data.categories);
     } catch (err) {
       messageApi.error('Failed to fetch categories.');
@@ -31,16 +38,21 @@ const Categories = ({ type }) => {
     getCategories();
   }, [type]);
 
-  const handleAdd = async () => {
+ const handleAdd = async () => {
     if (!newCategory.trim()) return;
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
+      const payload = { name: newCategory.trim(), type };
 
-      await axios.post(`${API}/categories`, { name: newCategory.trim(), type }, {
-  headers: {
-    "X-Client": window.location.hostname.split(".")[0],
-  },
-});
+      if (selectedEntity) {
+        payload.entity = selectedEntity.EntityId; // ✅ only add if exists
+      }
+
+      await axios.post(`${API}/categories`, payload, {
+        headers: {
+          "X-Client": window.location.hostname.split(".")[0],
+        },
+      });
       setNewCategory('');
       getCategories();
       messageApi.success(`${type === 'asset' ? 'Asset Type' : 'Category'} added`);
@@ -188,7 +200,7 @@ const Categories = ({ type }) => {
             /> }
 
             <Button color="green" variant="solid" icon={<PlusOutlined />} onClick={handleAdd}
-            style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}>
+            style= {{ background: "linear-gradient(to bottom right, #029bd2, #20c997)", borderColor: "#20c997" }}>
               Add
             </Button>
 

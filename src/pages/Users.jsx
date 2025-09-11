@@ -214,7 +214,7 @@ const Users = () => {
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h4>Users</h4>
                     <Button color="green" variant="solid" onClick={showAddModal}
-                        style={{ backgroundColor: "#20c997", borderColor: "#20c997" }} >Add User</Button>
+                        style={{ background: "linear-gradient(to bottom right, #029bd2, #20c997)", borderColor: "#20c997" }} >Add User</Button>
 
 
                 </div>

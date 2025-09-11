@@ -10,40 +10,72 @@ const clientConfigs = {
   "jamiarabbani.web.app": {
     CLOUD_NAME: "drinjgbm5",
     UPLOAD_PRESET: "FaizaneHajveriImages",
-    Header_FullName: "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
-    Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
     Footer_Names: `
-    <div style="display: flex; gap: 20px; direction: rtl; justify-content:center">
-  <div>علامہ محمد طیب صدیقی </br> 0300-9427139</div>
-  <div>قاری محمد طاہر فاروقی </br> 0300-4286360</div>
-  <div>علامہ سعید احمد عثمانی </br> 0321-4615565</div>
-</div>
-`,
+      <div style="display: flex; gap: 20px; direction: rtl; justify-content:center">
+      <div>علامہ محمد طیب صدیقی </br> 0300-9427139</div>
+      <div>قاری محمد طاہر فاروقی </br> 0300-4286360</div>
+      <div>علامہ سعید احمد عثمانی </br> 0321-4615565</div>
+    </div>
+    `,
 
-    Entities :[
-    {EntityId: 1 , Name : 'جامع  مسجد  ربانی' },
-    {EntityId: 2 , Name : 'دارالعلوم  بہارِ  مدینہ' },
-    {EntityId: 3 , Name : 'نِشتر  قبرستان' },
+    Entities: [
+      {
+        EntityId: 1, Name: ' جامع مسجد ربانی ',
+        Header_FullName: "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 2, Name: ' دارالعلوم بہارِ مدینہ گرلز',
+        Header_FullName: 'دارالعلوم بہارِ مدینہ گرلز',
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 3, Name: ' دارالعلوم بہارِ مدینہ بوائز',
+        Header_FullName: 'دارالعلوم بہارِ مدینہ بوائز',
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 4, Name: ' نِشتر قبرستان',
+        Header_FullName: 'نِشتر قبرستان'
+      },
+      {
+        EntityId: 5, Name: ' میلاد فورس پاکستان',
+        Header_FullName: 'میلاد فورس پاکستان'
+      },
     ]
   },
   "localhost": {
     CLOUD_NAME: "drinjgbm5",
     UPLOAD_PRESET: "FaizaneHajveriImages",
-    Header_FullName: "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
-    Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
-    Footer_Names: `
-    <div style="display: flex; gap: 20px; direction: rtl; justify-content:center">
-  <div>علامہ محمد طیب صدیقی </br> 0300-9427139</div>
-  <div>قاری محمد طاہر فاروقی </br> 0300-4286360</div>
-  <div>علامہ سعید احمد عثمانی </br> 0321-4615565</div>
-</div>
-`,
-
-    // Entities :[
-    // {EntityId: 1 , Name : 'جامع  مسجد  ربانی' },
-    // {EntityId: 2 , Name : 'دارالعلوم  بحرِ  مدینہ' },
-    // {EntityId: 3 , Name : 'نِشتر  قبرستان' },
-    // ]
+    Header_FullName: "جامع مسجد فیضانِ ہجویری",
+    Header_Address: `سکین کالج والی گلی P-565، بلال روڈ ، 
+            لنک ویسٹ کینال روڈ، امین ٹاؤن، فیصل آباد`,
+    Footer_Names: "مفتی نزاکت علی المدنی &nbsp;:&nbsp; 7812905-0306",
+    Entities: [
+      {
+        EntityId: 1, Name: ' جامع مسجد ربانی ',
+        Header_FullName: "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 2, Name: ' دارالعلوم بہارِ مدینہ گرلز',
+        Header_FullName: 'دارالعلوم بہارِ مدینہ گرلز',
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 3, Name: ' دارالعلوم بہارِ مدینہ بوائز',
+        Header_FullName: 'دارالعلوم بہارِ مدینہ بوائز',
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`
+      },
+      {
+        EntityId: 4, Name: ' نِشتر قبرستان',
+        Header_FullName: 'نِشتر قبرستان'
+      },
+      {
+        EntityId: 5, Name: ' میلاد فورس پاکستان',
+        Header_FullName: 'میلاد فورس پاکستان'
+      },
+    ]
   },
 };
 

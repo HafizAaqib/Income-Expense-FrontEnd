@@ -9,6 +9,11 @@ import Contact from './pages/Contact'
 import Users from './pages/Users'
 import Categories from './pages/Categories'
 import Transactions from './pages/Transactions'
+import Students from './pages/Students'
+import DuePayments from './pages/DuePayments'
+import MonthlyFees from './pages/MonthlyFees'
+import Donors from './pages/Donors'
+import DonorTracking from './pages/DonorTracking'
 
 function App() {
   let savedUser = 'null';
@@ -65,6 +70,11 @@ function App() {
                     <Route path="/expense" element={<Transactions type="expense" />} />
                     <Route path="/assets" element={<Transactions type="asset" />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/students" element={<Students />} />
+                    <Route path="/duePayments" element={<DuePayments />} />
+                    <Route path="/monthlyfee" element={<MonthlyFees />} />
+                    <Route path="/donors" element={<Donors />} />
+                    <Route path="/donorTracking" element={<DonorTracking />} />
                   </Routes>
                 </div>
               </div>

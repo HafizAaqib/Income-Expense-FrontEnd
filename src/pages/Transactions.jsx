@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, DatePicker, message, Popconfirm, Select, Grid } from 'antd';
+import { Collapse, Table, Button, Modal, Form, Input, DatePicker, message, Popconfirm, Select, Grid, Row, Col, Tag } from 'antd';
 import axios from 'axios';
-import { EditOutlined, DeleteOutlined, CloseCircleFilled, EyeOutlined, WhatsAppOutlined, PrinterOutlined, FileImageOutlined, UploadOutlined, PictureOutlined, FilePdfOutlined, PlusCircleOutlined, ScheduleOutlined, CameraOutlined } from '@ant-design/icons';
+import { FileTextOutlined, FilterOutlined, UpOutlined, DownOutlined, EditOutlined, DeleteOutlined, CloseCircleFilled, EyeOutlined, WhatsAppOutlined, PrinterOutlined, FileImageOutlined, UploadOutlined, PictureOutlined, FilePdfOutlined, PlusCircleOutlined, ScheduleOutlined, CameraOutlined, UpCircleOutlined, DownSquareOutlined, UpSquareOutlined, DownCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import html2pdf from "html2pdf.js";
 import Spinner from '../components/Spinner';
 import { CONFIG } from "./clientConfig";
 
-
+const { Panel } = Collapse;
 const { RangePicker } = DatePicker;
 const { useBreakpoint } = Grid;
+
+
 
 const Transactions = ({ type }) => {
     const trxnType = type; // === 'income';
@@ -26,6 +28,9 @@ const Transactions = ({ type }) => {
     const [imagesModalVisible, setImagesModalVisible] = useState(false);
     const [form] = Form.useForm();
     const [categories, setCategories] = useState([]);
+    const [donors, setDonors] = useState([]);
+    const [duePayments, setDuePayments] = useState([]);
+
     const [users, setUsers] = useState([]);
 
     const [searchText, setSearchText] = useState('');
@@ -35,14 +40,15 @@ const Transactions = ({ type }) => {
     const [isDataUploading, setIsDataUploading] = useState(false);
     const isMobile = useBreakpoint().xs;
     const [messageApi, msgContextHolder] = message.useMessage();
+    const [open, setOpen] = useState(false);
+
+
 
 
     const getTransactions = async () => {
         setLoading(true);
         try {
-            const params = {
-                type,
-            };
+            const params = { type };
 
             if (searchText) params.search = searchText;
             if (selectedCategory) params.category = selectedCategory;
@@ -53,8 +59,16 @@ const Transactions = ({ type }) => {
             if (selectedDateRange?.[1]) {
                 params.endDate = selectedDateRange[1].endOf('day').toISOString();
             }
+
+            // ✅ add entity filter if available
+            const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+            if (selectedEntity) {
+                params.entity = selectedEntity.EntityId;
+            }
+
             const API = import.meta.env.VITE_API_BASE_URL;
-            const res = await axios.get(`${API}/transactions/getAll`, { params ,
+            const res = await axios.get(`${API}/transactions/getAll`, {
+                params,
                 headers: {
                     "X-Client": window.location.hostname.split(".")[0],
                 },
@@ -71,15 +85,60 @@ const Transactions = ({ type }) => {
     const fetchCategories = async () => {
         try {
             const API = import.meta.env.VITE_API_BASE_URL;
-            const res = await axios.get(`${API}/categories?type=${type}`, {
+
+            // ✅ get selectedEntity from localStorage
+            const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+
+            let url = `${API}/categories?type=${type}`;
+            if (selectedEntity) {
+                url += `&entity=${selectedEntity.EntityId}`;
+            }
+
+            const res = await axios.get(url, {
                 headers: {
                     "X-Client": window.location.hostname.split(".")[0],
                 },
             });
+
             setCategories(res.data.categories);
         } catch (error) {
             console.error("Error fetching categories:", error);
         }
+    };
+    const getDonors = async () => {
+        try {
+            const API = import.meta.env.VITE_API_BASE_URL;
+            const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
+                        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+
+            let url = `${API}/donors?status=active&`;
+      if (selectedEntity) url += `entity=${selectedEntity.EntityId}&`;
+
+            const res = await axios.get(url, { headers: clientHeader });
+            setDonors(res.data.donors);
+        } catch (err) {
+            messageApi.error("Failed to fetch donors");
+            console.error("Error fetching donors:", err.response?.data || err.message);
+
+        }
+    };
+    const getDuePayments = async () => {
+        setLoading(true);
+        try {
+            const API = import.meta.env.VITE_API_BASE_URL;
+            const entity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+            let url = `${API}/due-payments?`;
+            url += `status=unpaid&`;
+            if (entity) url += `entity=${entity.EntityId}&`;
+
+            const res = await axios.get(url, {
+                headers: { "X-Client": window.location.hostname.split(".")[0] },
+            });
+            setDuePayments(res.data.duePayments);
+        } catch {
+            messageApi.error("Failed to fetch due payments");
+        }
+        setLoading(false);
     };
 
     const fetchUsers = async () => {
@@ -117,6 +176,12 @@ const Transactions = ({ type }) => {
         fetchCategories();
         fetchUsers();
         getTransactions();
+        if (type === 'income') {
+            getDonors();
+        }
+        if (type === 'expense') {
+            getDuePayments();
+        }
 
     }, [type, searchText, selectedCategory, selectedUser, selectedDateRange]);
 
@@ -151,16 +216,27 @@ const Transactions = ({ type }) => {
         setViewModalVisible(true);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (record) => {
         try {
             const API = import.meta.env.VITE_API_BASE_URL;
-            await axios.delete(`${API}/transactions/${id}`, {
+            await axios.delete(`${API}/transactions/${record._id}`, {
                 headers: {
                     "X-Client": window.location.hostname.split(".")[0],
                 },
             });
             messageApi.success(`${trxnType === 'income' ? 'Income' : (trxnType === 'expense' ? 'Expense' : 'Asset')} deleted`);
+            if (type === 'expense' && record.duePayment) {
+                window.location.reload();
+                return;
+            }
+
             getTransactions();
+            if (type === 'income') {
+                getDonors();
+            }
+            if (type === 'expense') {
+                getDuePayments();
+            }
         } catch {
             messageApi.error('Delete failed');
         }
@@ -197,7 +273,18 @@ const Transactions = ({ type }) => {
                 messageApi.success(`${trxnType === 'income' ? 'Income' : (trxnType === 'expense' ? 'Expense' : 'Asset')} added`);
             }
             setIsModalOpen(false);
+            if (type === 'expense' && payload.duePayment) {
+                window.location.reload();
+                return;
+            }
+
             getTransactions();
+            if (type === 'income') {
+                getDonors();
+            }
+            if (type === 'expense') {
+                getDuePayments();
+            }
         } catch {
             messageApi.error('Operation failed');
         }
@@ -212,11 +299,35 @@ const Transactions = ({ type }) => {
         },
 
         {
-            title: trxnType !== 'expense' ? 'Donor Name' : 'Paid To',
-            dataIndex: 'reference',
-            align: 'center',
-            responsive: ['md'], // ✅ Show only on medium+ screens
-        },
+            title: trxnType !== "expense" ? "Donor Name" : "Paid To",
+            dataIndex: "reference",
+            align: "center",
+            responsive: ["md"], // ✅ Show only on medium+ screens
+            render: (text, record) => (
+                <>
+                    {trxnType === "income" && (
+                        <>
+                            {record.donor ? (
+                                <Tag color="green">{text || "Regular Donor"}</Tag>
+                            ) : (
+                                text
+                            )}
+                        </>
+                    )}
+
+                    {trxnType === "expense" && (
+                        <>
+                            {record.duePayment ? (
+                                <Tag color="orange">{text || "From Due"}</Tag>
+                            ) : (
+                                text
+                            )}
+                        </>
+                    )}
+                </>
+            ),
+        }
+        ,
         {
             title: 'Phone #',
             dataIndex: 'phoneNumber',
@@ -265,7 +376,7 @@ const Transactions = ({ type }) => {
                     {(isAdmin || canUpdateData) &&
                         <>
                             <Button type="link" icon={<EditOutlined />} onClick={() => showEditModal(record)} style={{ color: '#52c41a' }} />
-                            <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record._id)}>
+                            <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(record)}>
                                 <Button type="link" danger icon={<DeleteOutlined />} />
                             </Popconfirm>
                         </>
@@ -299,8 +410,12 @@ const Transactions = ({ type }) => {
   <div>
 
     <div class="center" style="margin-top: 15px; padding-bottom: 5px;">
-      <div style="font-size: 15px; font-weight: bold;">${CONFIG.Header_FullName}</div>
-     ${CONFIG.Header_Address}
+      <div style="font-size: 15px; font-weight: bold;">${CONFIG.Header_FullName?.trim()
+                ? CONFIG.Header_FullName
+                : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.Header_FullName ?? ""}</div>
+     ${CONFIG.Header_Address?.trim()
+                ? CONFIG.Header_Address
+                : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.Header_Address ?? ""}
     </div>
 
     <div class="box">
@@ -510,8 +625,12 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
             border-radius: 6px;
             margin-bottom: 15px;
         ">
-            <div style="font-size: 16px; font-weight: bold; margin-bottom:10px;">${CONFIG.Header_FullName}</div>
-            <div style="font-size: 11px;">${CONFIG.Header_Address}</div>
+            <div style="font-size: 16px; font-weight: bold; margin-bottom:10px;">${CONFIG.Header_FullName?.trim()
+                ? CONFIG.Header_FullName
+                : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.Header_FullName ?? ""}</div>
+            <div style="font-size: 11px;">${CONFIG.Header_Address?.trim()
+                ? CONFIG.Header_Address
+                : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.Header_Address ?? ""}</div>
         </div>
 
         <!-- Details (2 columns per row) -->
@@ -599,6 +718,10 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
     const downloadPdf = (transactions) => {
 
+        const totalAmount = trxnType !== 'asset'
+            ? transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+            : 0;
+
         const categoryName = selectedCategory
             ? categories.find(c => c._id === selectedCategory)?.name
             : "";
@@ -631,7 +754,9 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
     <!-- ✅ Header -->
     <div class="center" style="margin-top: 15px; padding-bottom: 3px; color: #0b4f2f; font-weight: bold; font-size: 16px;">
-      ${CONFIG.Header_FullName}
+      ${CONFIG.Header_FullName?.trim()
+                ? CONFIG.Header_FullName
+                : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.Header_FullName ?? ""}
     </div>
      <div class="center" style="margin-top: 4px;">
           ${trxnType === 'income' ? 'Income' : (trxnType === 'expense' ? 'Expense' : 'Assets')} Report ${filterLine ? " ~ " + filterLine : ""}
@@ -663,6 +788,16 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
         `
                 )
                 .join("")}
+                ${trxnType !== 'asset'
+                ? `
+            <tr style="font-weight: bold; background-color: #f5f5f5;">
+              <td colspan="3" style="text-align: center;">کل</td>
+              <td>${totalAmount.toLocaleString()} روپے</td>
+              <td colspan="2"></td>
+            </tr>
+          `
+                : ""
+            }
       </tbody>
     </table>
 
@@ -705,7 +840,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
         th {
           font-weight: bold;
           text-align: center;
-          background-color: #20c997;
+          background: linear-gradient(to bottom right, #029bd2, #20c997);      
           color: #fff;
           padding: 10px 8px;
           -webkit-print-color-adjust: exact;
@@ -772,6 +907,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
             });
 
             message.success("Image deleted successfully");
+
             getTransactions(); // refresh main list
             setViewTransaction(prev => ({
                 ...prev,
@@ -797,7 +933,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                     {(isAdmin || canAddData) &&
 
                         <Button color="green" variant="solid" onClick={showAddModal}
-                            style={{ backgroundColor: "#03adebff", borderColor: "#03adebff" }} >
+                            style={{ background: "linear-gradient(to bottom right, #029bd2, #20c997)", borderColor: "#03adebff" }} >
                             <ScheduleOutlined className="w-4 h-4 mr-2" />
                             Add {trxnType === 'income' ? 'Income' : (trxnType === 'expense' ? 'Expense' : 'Asset')}
                         </Button>
@@ -807,7 +943,159 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
 
                 {/* Filters Section */}
-                <div className="row mb-3 pt-2 rounded" style={{
+
+                <div
+                    className='filters-wrapper'
+                    style={{
+                        backgroundColor: "#20c9962c",
+                        background: "linear-gradient(to bottom , #029bd21d,  #20c9962c)",
+                        borderRadius: "8px",
+                        marginBottom: "16px",
+                        overflow: "hidden",
+                    }}
+                >
+                    {/* Header */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            userSelect: "none",
+                            color: "#01516e",
+                            margin: "3px",
+                            borderRadius: "5px"
+
+                        }}
+                        onClick={() => setOpen(!open)}
+                    >
+                        <span style={{ fontWeight: "bold" }}>Filters</span>
+                        {open ? <UpCircleOutlined /> : <DownCircleOutlined />}
+                    </div>
+
+                    {/* Body */}
+                    <div
+                        style={{
+                            maxHeight: open ? "1000px" : "0",
+                            overflow: "hidden",
+                            transition: "max-height 0.4s ease",
+                        }}
+                    >
+                        <div style={{ padding: "12px", paddingTop: "0px" }}>
+                            <Row gutter={[12, 12]}>
+                                {/* Search */}
+                                <Col xs={24} md={8}>
+                                    <label className='filterLabel'>Search</label>
+                                    <Input
+                                        placeholder="Search Name , Phone , Receitp #, Description."
+                                        value={searchText}
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                    />
+                                </Col>
+
+                                {/* From Date */}
+                                <Col xs={12} md={4}>
+                                    <label className='filterLabel'>From Date</label>
+                                    <DatePicker
+                                        placeholder="From Date"
+                                        value={selectedDateRange?.[0]}
+                                        onChange={(value) =>
+                                            setSelectedDateRange([value, selectedDateRange?.[1]])
+                                        }
+                                        format="DD MMM YYYY"
+                                        style={{ width: "100%" }}
+                                    />
+                                </Col>
+
+                                {/* To Date */}
+                                <Col xs={12} md={4}>
+                                    <label className='filterLabel'>To Date</label>
+                                    <DatePicker
+                                        placeholder="To Date"
+                                        value={selectedDateRange?.[1]}
+                                        onChange={(value) =>
+                                            setSelectedDateRange([selectedDateRange?.[0], value])
+                                        }
+                                        format="DD MMM YYYY"
+                                        style={{ width: "100%" }}
+                                    />
+                                </Col>
+
+                                {/* Category */}
+                                <Col xs={12} md={4}>
+                                    <label className='filterLabel'>Category</label>
+                                    <Select
+                                        placeholder="All"
+                                        value={selectedCategory}
+                                        onChange={(value) => setSelectedCategory(value)}
+                                        style={{ width: "100%" }}
+                                    >
+                                        <Option value="">
+                                            {trxnType === "asset" ? "All Types" : "All Categories"}
+                                        </Option>
+                                        {categories.map((cat) => (
+                                            <Option key={cat._id} value={cat._id}>
+                                                {cat.name}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Col>
+
+                                {/* Generated By (if allowed) */}
+                                {(isAdmin || canViewOtherUsersData) && (
+                                    <Col xs={12} md={4}>
+                                        <label className='filterLabel'>Generated By</label>
+                                        <Select
+                                            placeholder="Generated by All Users"
+                                            value={selectedUser}
+                                            onChange={(value) => setSelectedUser(value)}
+                                            style={{ width: "100%" }}
+                                        >
+                                            <Option value="">All Users</Option>
+                                            {users.map((usr) => (
+                                                <Option key={usr._id} value={usr._id}>
+                                                    {usr.name}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Col>
+                                )}
+
+                                {/* Buttons */}
+                                <Col
+                                    xs={24}
+                                    style={{
+                                        marginTop: "10px",
+                                        marginBottom: "3px",
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        gap: "8px",
+                                    }}
+                                >
+                                    <Button
+                                        type="primary"
+                                        style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}
+                                        icon={<FilePdfOutlined />}
+                                        onClick={() => downloadPdf(transactions)}
+                                    >
+                                        PDF
+                                    </Button>
+                                    {/* <Button
+                                        type="primary"
+                                        style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}
+                                        icon={<FilePdfOutlined />}
+                                        onClick={() => downloadPdf(transactions)}
+                                    >
+                                        Full Report
+                                    </Button> */}
+                                </Col>
+                            </Row>
+                        </div>
+                    </div>
+                </div>
+
+                {/* <div className="row mb-3 pt-2 rounded" style={{
                     backgroundColor: "#20c9962c"
                     , marginLeft: "-1.5rem", marginRight: "-1.5rem"
                     , paddingLeft: "1rem", paddingRight: "1rem"
@@ -829,12 +1117,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
 
                     <div className="col-md-3 mb-2">
-                        {/* <RangePicker
-                        value={selectedDateRange}
-                        onChange={(value) => setSelectedDateRange(value)}
-                        format="DD-MM-YYYY"
-                        style={{ width: '100%' }}
-                    /> */}
+
 
                         {isMobile ? (
                             <div className="d-flex" style={{ gap: '8px' }}>
@@ -918,7 +1201,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                         </div>
                     </div>
 
-                </div>
+                </div> */}
 
 
 
@@ -953,18 +1236,97 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                         {editMode && <Form.Item name="receiptNumber" label="Receipt #">
                             <Input readOnly />
                         </Form.Item>}
-                        <Form.Item name="reference" label={trxnType !== 'expense' ? 'Donor Name' : 'Paid To'}>
+
+                        {/* ✅ Regular Donor selection */}
+                        {trxnType === "income" && (!editMode || editingTransaction.donor) && (
+                            <Form.Item name="donor" label="Regular Donor">
+                                <Select
+                                    allowClear
+                                    placeholder="Select Donor (optional)"
+                                    onChange={(donorId) => {
+                                        const donor = donors.find((d) => d._id === donorId);
+                                        if (donor) {
+                                            form.setFieldsValue({
+                                                reference: donor.name,
+                                                phoneNumber: donor.contact,
+                                                amount: donor.monthlyCommitment > 0 ? donor.monthlyCommitment : undefined,
+                                            });
+                                        }
+                                    }}
+                                >
+                                    {donors.map((d) => (
+                                        <Select.Option key={d._id} value={d._id}>
+                                            {d.name} {d.monthlyCommitment ? `- Rs.${d.monthlyCommitment}` : ""}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        )}
+
+
+                        {/* ✅ Due Payment selection */}
+                        {trxnType === "expense" && (!editMode
+                            //    || editingTransaction.duePayment
+                        ) && (
+                                <Form.Item name="duePayment" label="Due Payment">
+                                    <Select
+                                        allowClear
+                                        placeholder="Select Due Payment (optional)"
+                                        onChange={(dueId) => {
+                                            const duePayment = duePayments.find((d) => d._id === dueId);
+                                            if (duePayment) {
+                                                form.setFieldsValue({
+                                                    category: duePayment.category._id,
+                                                    amount: duePayment.amount,
+                                                    description: duePayment.description,
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        {duePayments.map((d) => (
+                                            <Select.Option key={d._id} value={d._id}>
+                                                {d.category.name} {d.amount ? `- Rs.${d.amount}` : ""}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            )}
+
+
+
+                        {/* ✅ One-time donor / Paid To */}
+                        <Form.Item
+                            name="reference"
+                            label={trxnType !== "expense" ? "Donor Name" : "Paid To"}
+                        >
                             <Input />
                         </Form.Item>
+
                         <Form.Item name="phoneNumber" label="Phone #">
                             <Input />
                         </Form.Item>
 
-                        {trxnType !== 'asset' && <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
-                            <Input type="number" />
-                        </Form.Item>}
+                        {trxnType !== "asset" && (
+                            <Form.Item
+                                name="amount"
+                                label="Amount"
+                                rules={[{ required: true }]}
+                            >
+                                <Input type="number" />
+                            </Form.Item>
+                        )}
 
-                        <Form.Item name="category" label={trxnType === 'asset' ? 'Asset Type' : 'Category'} rules={[{ required: true, message: `Please Select ${trxnType === 'asset' ? 'Asset Type' : 'Category'}` }]}>
+                        <Form.Item
+                            name="category"
+                            label={trxnType === "asset" ? "Asset Type" : "Category"}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: `Please Select ${trxnType === "asset" ? "Asset Type" : "Category"
+                                        }`,
+                                },
+                            ]}
+                        >
                             <Select>
                                 {categories.map(cat => (
                                     <Select.Option key={cat._id} value={cat._id}>

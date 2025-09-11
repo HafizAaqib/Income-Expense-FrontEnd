@@ -34,6 +34,15 @@
     margin-left: -1.5rem;
     margin-right: -1.5rem;
   }
+  .filters-wrapper {
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+}
+.filterLabel{
+  margin-bottom: 3px;
+  margin-left: 5px;
+  color: #01516e;
 }
 
 .description-column {
@@ -61,5 +70,67 @@
 :where(.css-dev-only-do-not-override-pjilya).ant-card .ant-card-body {
 text-align: center; padding-left: 3px; padding-right: 3px;
 }
+}
+
+/* Themed Segmented - final, clean version */
+.themed-segmented {
+  /* container */
+  --accent1: #029bd2;
+  --accent2: #20c997;
+  background: #f6f8fa;                /* subtle container background */
+  border-radius: 10px;
+  padding: 4px;
+  display: inline-block;
+  /* remove visual border from ant if present */
+  border: none;
+  box-shadow: none;
+  margin: 1rem;
+}
+
+/* each item sits above the thumb */
+.themed-segmented .ant-segmented-item {
+  position: relative;
+  z-index: 1;                         /* keep items above the thumb */
+  color: var(--accent1);
+  font-weight: 500;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;      /* soft rectangle */
+  transition: color 0.22s ease, transform 0.12s ease, background 0.18s;
+  margin: 0.1rem;
+}
+
+/* subtle hover on unselected items (shows above thumb) */
+.themed-segmented .ant-segmented-item:hover:not(.ant-segmented-item-selected) {
+  background: rgba(2, 155, 210, 0.06); /* light teal tint */
+  color: var(--accent2) !important;
+  cursor: pointer;
+}
+
+/* the moving highlight (thumb) - gradient + soft shadow */
+.themed-segmented .ant-segmented-thumb {
+  background: linear-gradient(90deg, var(--accent1), var(--accent2)) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 14px rgba(2, 155, 210, 0.12);
+  transition: transform 0.28s cubic-bezier(.22,.99,.33,.99), left 0.28s, top 0.28s, width 0.28s;
+  z-index: 0 !important;              /* keep it under items */
+  /* ensure no white border from ant shows */
+  border: none !important;
+}
+
+/* selected item: no background (let thumb show), white text */
+.themed-segmented .ant-segmented-item-selected {
+  background: linear-gradient(90deg, var(--accent1), var(--accent2)) !important;
+
+  /* background: transparent !important; */
+  color: #ffffff !important;          /* white text against gradient */
+  font-weight: 600;
+}
+
+/* small responsive tweak: slightly smaller padding on compact screens */
+@media (max-width: 480px) {
+  .themed-segmented .ant-segmented-item {
+    padding: 6px 8px !important;
+    font-size: 14px;
+  }
 }
 
