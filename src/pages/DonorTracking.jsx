@@ -124,6 +124,7 @@ const DonorTracking = () => {
                 paidBy: values.paidBy,
                 phoneNumber: values.phoneNumber,
                 description: values.description,
+                user: JSON.parse(localStorage.getItem('user'))._id
             };
 
             await axios.post(`${API}/donors/pay`, payload, { headers: clientHeader });
@@ -345,7 +346,9 @@ const DonorTracking = () => {
                         rules={[{ required: true, message: "Category is required" }]}
                     >
                         <Select placeholder="Select Income Category">
-                            {categories.map((c) => (
+                            {categories
+                            .filter(cat => cat.status === 1) // exclude hidden categories
+                            .map((c) => (
                                 <Option key={c._id} value={c._id}>
                                     {c.name}
                                 </Option>

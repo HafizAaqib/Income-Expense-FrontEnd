@@ -14,6 +14,7 @@ import DuePayments from './pages/DuePayments'
 import MonthlyFees from './pages/MonthlyFees'
 import Donors from './pages/Donors'
 import DonorTracking from './pages/DonorTracking'
+import Receipt from './pages/Receipt'
 
 function App() {
   let savedUser = 'null';
@@ -38,6 +39,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/receipt/:id" element={<Receipt />} />
 
         {/* Protected Routes with Sidebar */}
         <Route
@@ -45,9 +47,9 @@ function App() {
           element={
             <ProtectedRoutes>
               <div className="d-flex flex-column flex-md-row" style={{ height: '100vh' }}>
-  <Sidebar />
-  <div className="flex-grow-1 p-3" style={{ overflowY: 'auto' }}>
-              {/* <div className="d-flex flex-column flex-md-row">
+                <Sidebar />
+                <div className="flex-grow-1 p-3" style={{ overflowY: 'auto' }}>
+                  {/* <div className="d-flex flex-column flex-md-row">
                 <Sidebar />
                 <div className="flex-grow-1 p-3"> */}
                   <Routes>

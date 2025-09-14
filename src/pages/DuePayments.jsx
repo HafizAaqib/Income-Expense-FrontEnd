@@ -157,6 +157,7 @@ const DuePayments = () => {
                     date: values.paymentDate,         // maps to transaction.date
                     phoneNumber: values.phoneNumber,  // maps to transaction.phoneNumber
                     description: values.description,  // overrides / sets new description
+                    user: JSON.parse(localStorage.getItem('user'))._id
                 },
                 {
                     headers: { "X-Client": window.location.hostname.split(".")[0] },
@@ -313,7 +314,9 @@ const DuePayments = () => {
                         allowClear
                         style={{ width: 220 }}
                     >
-                        {categories.map((c) => (
+                        {categories
+                        .filter(cat => cat.status === 1) // exclude hidden categories
+                        .map((c) => (
                             <Option key={c._id} value={c._id}>
                                 {c.name}
                             </Option>
@@ -353,7 +356,9 @@ const DuePayments = () => {
                         rules={[{ required: true, message: "Category is required" }]}
                     >
                         <Select>
-                            {categories.map((c) => (
+                            {categories
+                            .filter(cat => cat.status === 1) // exclude hidden categories
+                            .map((c) => (
                                 <Option key={c._id} value={c._id}>
                                     {c.name}
                                 </Option>

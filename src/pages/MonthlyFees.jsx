@@ -128,6 +128,7 @@ const MonthlyFees = () => {
         paidBy: values.paidBy,
         phoneNumber: values.phoneNumber,
         description: values.description,
+        user: JSON.parse(localStorage.getItem('user'))._id
       };
 
       await axios.post(`${API}/fees/pay`, payload, { headers: clientHeader });
@@ -356,7 +357,9 @@ const MonthlyFees = () => {
             rules={[{ required: true, message: "Category is required" }]}
           >
             <Select placeholder="Select Income Category">
-              {categories.map((c) => (
+              {categories
+              .filter(cat => cat.status === 1) // exclude hidden categories
+              .map((c) => (
                 <Option key={c._id} value={c._id}>
                   {c.name}
                 </Option>

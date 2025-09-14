@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import html2pdf from "html2pdf.js";
 import Spinner from '../components/Spinner';
 import { CONFIG } from "./clientConfig";
+import QRCode from "qrcode";
 
 const { Panel } = Collapse;
 const { RangePicker } = DatePicker;
@@ -109,10 +110,10 @@ const Transactions = ({ type }) => {
         try {
             const API = import.meta.env.VITE_API_BASE_URL;
             const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
-                        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+            const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
 
             let url = `${API}/donors?status=active&`;
-      if (selectedEntity) url += `entity=${selectedEntity.EntityId}&`;
+            if (selectedEntity) url += `entity=${selectedEntity.EntityId}&`;
 
             const res = await axios.get(url, { headers: clientHeader });
             setDonors(res.data.donors);
@@ -401,7 +402,7 @@ const Transactions = ({ type }) => {
         const user = viewTransaction?.user?.name || '';
         const reference = viewTransaction?.reference || '';
         const description = viewTransaction?.description || '';
-        const date = dayjs(viewTransaction?.date || '').format('YYYY-MM-DD');
+        const date = dayjs(viewTransaction?.date || '').format('DD-MMM-YYYY');
 
 
         const printWindow = window.open('', '_blank');
@@ -420,7 +421,7 @@ const Transactions = ({ type }) => {
 
     <div class="box">
     <div class="row"><span class="label">رسید نمبر&nbsp;&nbsp;&nbsp;:</span> <span>${receiptNumber}</span></div>
-    <div class="row"><span class="label">تاریخ&nbsp;&nbsp;&nbsp;:</span> <span>${date}</span></div>
+    <div class="row"><span class="label">تاریخ&nbsp;&nbsp;&nbsp;:</span> <span style="direction:ltr;" >${date}</span></div>
 ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;&nbsp;&nbsp;:</span> <span>${amount} روپے</span></div>`}
 <div class="row"><span class="label"> ${trxnType === 'asset' ? 'ہدیہ' : 'مد'} &nbsp;&nbsp;&nbsp;:</span> <span>${category}</span></div>
     <div class="row"><span class="label">نام&nbsp;&nbsp;&nbsp;:</span> <span>${reference}</span></div>
@@ -431,8 +432,11 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
     ${trxnType === 'asset' ? '' : `<div class="box">
       <div class="center" style="font-weight: bold;">نوٹ</div>
-      <div>
-        آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔
+      <div class="center">
+            ${CONFIG.PrintNotes?.trim()
+                    ? CONFIG.PrintNotes
+                    : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.PrintNotes ?? ""}
+        
       </div>
     </div> `}
 
@@ -599,7 +603,22 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
         const user = viewTransaction?.user?.name || '';
         const reference = viewTransaction?.reference || '';
         const description = viewTransaction?.description || '';
-        const date = dayjs(viewTransaction?.date || '').format('YYYY-MM-DD');
+        const date = dayjs(viewTransaction?.date || '').format('DD-MM-YYYY');
+
+        let url = window.location.hostname;
+        if(url === "localhost"){
+            url = "localhost:5173";
+        }
+
+const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id || "", {
+  width: 100,
+  margin: 2,
+  color: {
+    dark: "#0a7857ff",  // your theme color (foreground)
+    light: "#ffffff"  // background color
+  }
+});
+
 
         // Create a container for our styled receipt
         const container = document.createElement('div');
@@ -636,7 +655,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
         <!-- Details (2 columns per row) -->
         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; font-size: 12px; padding:5px;">
             <div style="flex: 1; min-width: 200px;"><span class="label">رسید نمبر :</span> ${receiptNumber}</div>
-            <div style="flex: 1; min-width: 200px;"><span class="label">تاریخ :</span> ${date}</div>
+            <div style="flex: 1; min-width: 200px;"><span class="label">تاریخ :</span> <span style="direction:ltr;"> ${date} </span> </div>
             
             
             ${trxnType === 'asset' ? '' : `<div style="flex: 1; min-width: 200px;"><span class="label">رقم :</span> ${amount} روپے</div>`}
@@ -657,15 +676,28 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
             background-color: #f5fbf7;
         ">
             <p style="text-align: center; font-weight: bold;">نوٹ</p>
-            آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔
-        </div>`
+                <div style="text-align: center; ">    
+                    ${CONFIG.PrintNotes?.trim()
+                    ? CONFIG.PrintNotes
+                    : (JSON.parse(localStorage.getItem("selectedEntity") || "null"))?.PrintNotes ?? ""}
+                    </div>
+                </div>`
+
             }
 
         <!-- Footer -->
         <div style="text-align: center; font-size: 12px;">
-            <p style="font-weight: bold;"> ${trxnType === 'asset' ? '' : 'مزید '} 
+      <div style = "display:flex; justify-content: space-around; align-items:center;">  
+        
+        <div>    
+        <p style="font-weight: bold;"> ${trxnType === 'asset' ? '' : 'مزید '} 
              معلومات یا شرعی رہنمائی کے لیے:</p>
             ${CONFIG.Footer_Names}
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+  <img src="${qrDataUrl}" alt="QR Code" style="width:80px; height:80px;" />
+</div>
+            </div>
             <div style="margin-top: 10px; border-top: 1px dashed #165c2f; padding-top: 5px;">
             <span>Generated By : </span> ${user}
             </div>
@@ -717,6 +749,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
 
 
     const downloadPdf = (transactions) => {
+    transactions = [...transactions].reverse();
 
         const totalAmount = trxnType !== 'asset'
             ? transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
@@ -779,7 +812,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                     (t) => `
           <tr>
             <td>${t.receiptNumber || ""}</td>
-            <td>${dayjs(t.date).format('DD MMM YYYY')}</td>
+            <td style="direction:ltr" >${dayjs(t.date).format('DD-MMM-YYYY')}</td>
             <td>${t.reference || ""}</td>
             ${trxnType === 'asset' ? '' : `<td>${t.amount} روپے</td>`}
             <td>${t.category?.name || ""}</td>
@@ -1034,12 +1067,16 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                                         <Option value="">
                                             {trxnType === "asset" ? "All Types" : "All Categories"}
                                         </Option>
-                                        {categories.map((cat) => (
-                                            <Option key={cat._id} value={cat._id}>
-                                                {cat.name}
-                                            </Option>
-                                        ))}
+
+                                        {categories
+                                            .filter(cat => cat.status !== 3) // ✅ only Active categories
+                                            .map(cat => (
+                                                <Option key={cat._id} value={cat._id}>
+                                                    {cat.name}
+                                                </Option>
+                                            ))}
                                     </Select>
+
                                 </Col>
 
                                 {/* Generated By (if allowed) */}
@@ -1095,113 +1132,6 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                     </div>
                 </div>
 
-                {/* <div className="row mb-3 pt-2 rounded" style={{
-                    backgroundColor: "#20c9962c"
-                    , marginLeft: "-1.5rem", marginRight: "-1.5rem"
-                    , paddingLeft: "1rem", paddingRight: "1rem"
-                }}>
-
-                    <div className="col-12 col-md-4 mb-2">
-                        <div className="d-flex flex-row flex-md-row" style={{ gap: '8px' }}>
-                            <div style={{ flex: 1 }}>
-                                <Input
-                                    placeholder="Search Name , Phone , Receitp #, Description."
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    style={{ flex: 1 }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <div className="col-md-3 mb-2">
-
-
-                        {isMobile ? (
-                            <div className="d-flex" style={{ gap: '8px' }}>
-                                <DatePicker
-                                    placeholder="From Date"
-                                    value={selectedDateRange?.[0]}
-                                    onChange={(value) =>
-                                        setSelectedDateRange([value, selectedDateRange?.[1]])
-                                    }
-                                    format="DD-MM-YYYY"
-                                    style={{ width: '100%' }}
-                                />
-                                <DatePicker
-                                    placeholder="To Date"
-                                    value={selectedDateRange?.[1]}
-                                    onChange={(value) =>
-                                        setSelectedDateRange([selectedDateRange?.[0], value])
-                                    }
-                                    format="DD-MM-YYYY"
-                                    style={{ width: '100%' }}
-                                />
-                            </div>
-                        ) : (
-                            <RangePicker
-                                value={selectedDateRange}
-                                onChange={(value) => setSelectedDateRange(value)}
-                                format="DD-MM-YYYY"
-                                style={{ width: '100%' }}
-                            />
-                        )}
-
-                    </div>
-
-                    <div className="col-12 col-md-5 mb-2">
-                        <div className="d-flex flex-row flex-md-row" style={{ gap: '8px' }}>
-
-                            <div style={{ flex: 1 }}>
-                                <Select
-                                    placeholder="All"
-                                    value={selectedCategory}
-                                    onChange={(value) => setSelectedCategory(value)}
-                                    style={{ width: '100%' }}
-                                >
-                                    <Select.Option value=""> {trxnType === 'asset' ? 'All Types' : 'All Categories'}</Select.Option>
-                                    {categories.map(cat => (
-                                        <Select.Option key={cat._id} value={cat._id}>
-                                            {cat.name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </div>
-
-                            {(isAdmin || canViewOtherUsersData) && <div style={{ flex: 1 }}>
-                                <Select
-                                    placeholder="Generated by All Users"
-                                    value={selectedUser}
-                                    onChange={(value) => setSelectedUser(value)}
-                                    style={{ width: '100%' }}
-                                >
-                                    <Select.Option value="">All Users</Select.Option>
-                                    {users.map(usr => (
-                                        <Select.Option key={usr._id} value={usr._id}>
-                                            {usr.name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </div>}
-                            <div style={{ flex: 1, display: 'flex', justifyContent: 'end' }}>
-                                <Button
-                                    type="primary" color="green" variant="solid"
-                                    style={{ backgroundColor: "#20c997", borderColor: "#20c997" }}
-                                    icon={<FilePdfOutlined />}
-                                    onClick={() => downloadPdf(transactions)}
-
-                                >
-                                    PDF
-                                </Button>
-                            </div>
-
-
-                        </div>
-                    </div>
-
-                </div> */}
 
 
 
@@ -1328,12 +1258,15 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                             ]}
                         >
                             <Select>
-                                {categories.map(cat => (
-                                    <Select.Option key={cat._id} value={cat._id}>
-                                        {cat.name}
-                                    </Select.Option>
-                                ))}
+                                {categories
+                                    .filter(cat => cat.status === 1 || (editMode && cat.status === 2)) // exclude hidden categories
+                                    .map(cat => (
+                                        <Select.Option key={cat._id} value={cat._id}>
+                                            {cat.name}
+                                        </Select.Option>
+                                    ))}
                             </Select>
+
                         </Form.Item>
 
 

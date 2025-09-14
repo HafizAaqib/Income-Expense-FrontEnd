@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Input, Button, message, Popconfirm, Form } from 'antd';
+import { Table, Input, Button, message, Popconfirm, Form, Select, Tag } from 'antd';
 import axios from 'axios';
 import { EditOutlined, DeleteOutlined, PlusOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 
@@ -9,11 +9,18 @@ const Categories = ({ type }) => {
   const [newCategory, setNewCategory] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
+  const [editStatus, setEditStatus] = useState(1);
   const [messageApi, msgContextHolder] = message.useMessage();
 
   const selectedEntity = JSON.parse(localStorage.getItem('selectedEntity') || 'null');
 
-const getCategories = async () => {
+  const statusOptions = [
+    { label: 'Active', value: 1, color: 'green' },
+    { label: 'Closed (Keep Records)', value: 2, color: 'orange' },
+    { label: 'Closed (Hide Records)', value: 3, color: 'red' },
+  ];
+
+  const getCategories = async () => {
     setLoading(true);
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
@@ -38,20 +45,18 @@ const getCategories = async () => {
     getCategories();
   }, [type]);
 
- const handleAdd = async () => {
+  const handleAdd = async () => {
     if (!newCategory.trim()) return;
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
-      const payload = { name: newCategory.trim(), type };
+      const payload = { name: newCategory.trim(), type, status: 1 };
 
       if (selectedEntity) {
-        payload.entity = selectedEntity.EntityId; // ✅ only add if exists
+        payload.entity = selectedEntity.EntityId;
       }
 
       await axios.post(`${API}/categories`, payload, {
-        headers: {
-          "X-Client": window.location.hostname.split(".")[0],
-        },
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
       });
       setNewCategory('');
       getCategories();
@@ -64,11 +69,9 @@ const getCategories = async () => {
   const handleEdit = async (id) => {
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
-      await axios.put(`${API}/categories/${id}`, { name: editText }, {
-  headers: {
-    "X-Client": window.location.hostname.split(".")[0],
-  },
-});
+      await axios.put(`${API}/categories/${id}`, { name: editText, status: editStatus }, {
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
       setEditingId(null);
       messageApi.success(`${type === 'asset' ? 'Asset Type' : 'Category'} updated`);
       getCategories();
@@ -81,14 +84,12 @@ const getCategories = async () => {
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
       await axios.delete(`${API}/categories/${id}`, {
-  headers: {
-    "X-Client": window.location.hostname.split(".")[0],
-  },
-});
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
       messageApi.success('Deleted');
       getCategories();
-    } catch {
-      messageApi.error('Delete failed');
+    } catch (err) {
+      messageApi.error(err.response?.data?.message || 'Delete failed');
     }
   };
 
@@ -101,6 +102,7 @@ const getCategories = async () => {
         editingId === record._id ? (
           <Input
             value={editText}
+            style={{textAlign:"center" , paddingBottom:"5px"}}
             onChange={(e) => setEditText(e.target.value)}
             size="small"
             autoFocus
@@ -110,11 +112,29 @@ const getCategories = async () => {
         ),
     },
     {
+      title: 'Status',
+      dataIndex: 'status',
+      align: 'center',
+      render: (status, record) =>
+        editingId === record._id ? (
+          <Select
+            value={editStatus}
+            onChange={(val) => setEditStatus(val)}
+            size="small"
+            options={statusOptions}
+            style={{ width: 180 }}
+          />
+        ) : (
+          <Tag color={statusOptions.find(s => s.value === status)?.color}>
+            {statusOptions.find(s => s.value === status)?.label}
+          </Tag>
+        ),
+    },
+    {
       title: 'Actions',
       align: 'center',
       render: (record) =>
         editingId === record._id ? (
-
           <>
             <Button
               icon={<CheckOutlined />}
@@ -129,10 +149,9 @@ const getCategories = async () => {
               onClick={() => setEditingId(null)}
             />
           </>
-
         ) : (
           <>
-            {(isAdmin || canUpdateData) &&
+            {(isAdmin || canUpdateData) && (
               <>
                 <Button
                   icon={<EditOutlined />}
@@ -141,6 +160,7 @@ const getCategories = async () => {
                   onClick={() => {
                     setEditingId(record._id);
                     setEditText(record.name);
+                    setEditStatus(record.status);
                   }}
                 >
                   <span className="d-none d-md-inline">Edit</span>
@@ -157,7 +177,7 @@ const getCategories = async () => {
                   </Button>
                 </Popconfirm>
               </>
-            }
+            )}
           </>
         ),
     },
@@ -170,42 +190,42 @@ const getCategories = async () => {
   const canUpdateData = savedUser?.canUpdateData;
 
   return (
-
     <>
       {msgContextHolder}
 
       <div className="container mt-4">
-
-
-
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>{type === 'income' ? 'Income Categories' : (type === 'expense' ? 'Expense Categories' : 'Asset Types')}</h4>
+          <h4>
+            {type === 'income'
+              ? 'Income Categories'
+              : type === 'expense'
+              ? 'Expense Categories'
+              : 'Asset Types'}
+          </h4>
         </div>
 
-
-        {(isAdmin || canAddData) &&
-
+        {(isAdmin || canAddData) && (
           <div className="d-flex mb-3 gap-2">
-            {type !== 'asset' &&  <Input
-              placeholder="New Category Name"
+            <Input
+              placeholder={type === 'asset' ? 'New Asset Type' : 'New Category Name'}
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               onPressEnter={handleAdd}
-            /> }
-            {type === 'asset' && <Input
-              placeholder="New Assets Type"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              onPressEnter={handleAdd}
-            /> }
-
-            <Button color="green" variant="solid" icon={<PlusOutlined />} onClick={handleAdd}
-            style= {{ background: "linear-gradient(to bottom right, #029bd2, #20c997)", borderColor: "#20c997" }}>
+            />
+            <Button
+              color="green"
+              variant="solid"
+              icon={<PlusOutlined />}
+              onClick={handleAdd}
+              style={{
+                background: "linear-gradient(to bottom right, #029bd2, #20c997)",
+                borderColor: "#20c997"
+              }}
+            >
               Add
             </Button>
-
           </div>
-        }
+        )}
 
         <Table
           dataSource={categories}
@@ -213,10 +233,8 @@ const getCategories = async () => {
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 7 }}
-
         />
       </div>
-
     </>
   );
 };

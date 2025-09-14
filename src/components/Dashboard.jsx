@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Select, Row, Col, Progress, Statistic, Segmented, Button, Space, Badge } from 'antd';
+import { Card, Table, Select, Row, Col, Progress, Statistic, Segmented, Button, Space, Badge, Tag } from 'antd';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useSearchParams } from "react-router-dom";
+
 
 const Dashboard = () => {
   const [summary, setSummary] = useState({});
@@ -124,13 +125,17 @@ const Dashboard = () => {
             <Select
               value={selectedMonth}
               onChange={setSelectedMonth}
-              options={Array.from({ length: 12 }, (_, i) => ({
-                label: dayjs().month(i).format('MMMM'),
-                value: i + 1
-              }))}
+              options={[
+                { label: 'All', value: 0 }, // <-- Add this first
+                ...Array.from({ length: 12 }, (_, i) => ({
+                  label: dayjs().month(i).format('MMMM'),
+                  value: i + 1,
+                })),
+              ]}
               size="large"
               style={{ minWidth: 150 }}
             />
+
             <Select
               value={selectedYear}
               onChange={setSelectedYear}
@@ -222,12 +227,13 @@ const Dashboard = () => {
               </Card>
             </Col>
           </Row>
-          {/* Top 5 Transactions */}
+          {/* Top Transactions */}
           <Row gutter={16} style={{ marginTop: 24 }}>
             <Col span={24}>
               <Card
                 title={`Top ${selectedType === 'Income' ? 'Donations / Income' : 'Expenses'} (${dayjs().month(selectedMonth - 1).format('MMMM')} ${selectedYear})`}
               >
+                
                 <Table
                   dataSource={selectedType === 'Income' ? topIncome : topExpense}
                   rowKey={(record, idx) => record.receiptNumber || idx}
@@ -248,11 +254,20 @@ const Dashboard = () => {
                       align: 'center',
                       onCell: () => ({
                         style: {
+                          maxWidth: 200,       
                           whiteSpace: 'normal',
                           wordBreak: 'break-word',
                           textAlign: 'center',
                         },
                       }),
+                      render: (txt) => (
+                        <Tag
+                          color={selectedType === 'Income' ? 'green' : 'orange'}
+                          style={{ padding: "5px", fontSize: 14 }}
+                        >
+                          {txt}
+                        </Tag>
+                      ),
                     },
                     {
                       title: 'Phone #',
@@ -267,9 +282,13 @@ const Dashboard = () => {
                       align: 'center',
                       key: 'amount',
                       render: (amt) => (
-                        <span style={{ color: selectedType === 'Income' ? 'green' : '#f3491af7' }}>
+
+                        <Tag
+                          color={selectedType === 'Income' ? 'green' : 'orange'}
+                          style={{ fontWeight: 500, fontSize: 14, color: "#f3491af7'" }}
+                        >
                           {amt.toLocaleString()} Rs
-                        </span>
+                        </Tag>
                       ),
                     },
                     {
@@ -278,6 +297,7 @@ const Dashboard = () => {
                       key: 'category',
                       align: 'center',
                       responsive: ['md'],
+                      render: (cat) => cat?.name || '',
                     },
                     {
                       title: 'Date',
@@ -294,7 +314,7 @@ const Dashboard = () => {
                       align: 'center',
                       onCell: () => ({
                         style: {
-                          maxWidth: 200,        // <-- set your preferred width
+                          maxWidth: 200,   
                           whiteSpace: 'normal', // allow wrapping
                           wordBreak: 'break-word',
                           textAlign: 'center',
