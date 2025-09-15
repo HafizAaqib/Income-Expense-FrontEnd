@@ -98,9 +98,9 @@ const Receipt = () => {
                     }}
                 >
                     <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "10px" }}>
-                        {selectedEntity?.Header_FullName || ""}
+                        {CONFIG.Header_FullName || selectedEntity?.Header_FullName || ""}
                     </div>
-                    <div style={{ fontSize: "11px" , lineHeight:"Normal"}}>{selectedEntity?.Header_Address || ""}</div>
+                    <div style={{ fontSize: "11px" , lineHeight:"Normal"}}>{CONFIG.Header_Address || selectedEntity?.Header_Address || ""}</div>
                 </div>
 
                 {/* Receipt Details */}
@@ -151,7 +151,7 @@ const Receipt = () => {
                     >
                         <p style={{ textAlign: "center", fontWeight: "bold" }}>نوٹ</p>
                         <div style={{ textAlign: "center" , lineHeight:"Normal" }}>
-                            {selectedEntity?.PrintNotes || ""}
+                            {CONFIG.PrintNotes || selectedEntity?.PrintNotes || ""}
                         </div>
                     </div>
                 )}

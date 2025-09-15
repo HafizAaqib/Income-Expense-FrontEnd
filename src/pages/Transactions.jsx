@@ -606,18 +606,18 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
         const date = dayjs(viewTransaction?.date || '').format('DD-MM-YYYY');
 
         let url = window.location.hostname;
-        if(url === "localhost"){
+        if (url === "localhost") {
             url = "localhost:5173";
         }
 
-const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id || "", {
-  width: 100,
-  margin: 2,
-  color: {
-    dark: "#0a7857ff",  // your theme color (foreground)
-    light: "#ffffff"  // background color
-  }
-});
+        const qrDataUrl = await QRCode.toDataURL(url + '/receipt/' + viewTransaction?._id || "", {
+            width: 100,
+            margin: 2,
+            color: {
+                dark: "#0a7857ff",  // your theme color (foreground)
+                light: "#ffffff"  // background color
+            }
+        });
 
 
         // Create a container for our styled receipt
@@ -653,7 +653,7 @@ const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id 
         </div>
 
         <!-- Details (2 columns per row) -->
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; font-size: 12px; padding:5px;">
+        <!-- <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; font-size: 12px; padding:5px;">
             <div style="flex: 1; min-width: 200px;"><span class="label">رسید نمبر :</span> ${receiptNumber}</div>
             <div style="flex: 1; min-width: 200px;"><span class="label">تاریخ :</span> <span style="direction:ltr;"> ${date} </span> </div>
             
@@ -663,7 +663,108 @@ const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id 
 
             <div style="flex: 1; min-width: 200px;"><span class="label">نام :</span> ${reference}</div>
             <div style="flex: 1; min-width: 200px;"><span class="label">تفصیل :</span> ${description}</div>
-        </div>
+        </div> -->
+
+        <!-- Details -->
+<div style="
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 12px;
+">
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">رسید نمبر &nbsp;&nbsp;&nbsp;:</span>
+    <span style="color:#165c2f;">${receiptNumber}</span>
+  </div>
+
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">تاریخ &nbsp;&nbsp;&nbsp;:</span>
+    <span style="color:#165c2f; direction:ltr;">${date}</span>
+  </div>
+
+  ${trxnType === 'asset' ? '' : `
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">رقم &nbsp;&nbsp;&nbsp;:</span>
+    <span style="color:#165c2f;">${amount} روپے</span>
+  </div>`}
+
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">${trxnType === 'asset' ? 'ہدیہ &nbsp;&nbsp;&nbsp;:' : ' مد &nbsp;&nbsp;&nbsp;:'}</span>
+    <span style="color:#165c2f;">${category}</span>
+  </div>
+
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">نام &nbsp;&nbsp;&nbsp;:</span>
+    <span style="color:#165c2f;">${reference}</span>
+  </div>
+
+  <div style="
+      flex: 1;
+      min-width: 220px;
+      background: #ffffff;
+      border: 1px solid #e0e6e3;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  ">
+    <span style="min-width: 70px; color:#555; font-weight:600;">تفصیل &nbsp;&nbsp;&nbsp;:</span>
+    <span style="color:#165c2f;">${description}</span>
+  </div>
+</div>
+
 
         <!-- Note -->
         ${trxnType === 'asset' ? '' : `<div style="
@@ -685,23 +786,79 @@ const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id 
 
             }
 
-        <!-- Footer -->
-        <div style="text-align: center; font-size: 12px;">
-      <div style = "display:flex; justify-content: space-around; align-items:center;">  
-        
-        <div>    
-        <p style="font-weight: bold;"> ${trxnType === 'asset' ? '' : 'مزید '} 
-             معلومات یا شرعی رہنمائی کے لیے:</p>
-            ${CONFIG.Footer_Names}
-            </div>
-            <div style="text-align: center; margin-top: 10px;">
-  <img src="${qrDataUrl}" alt="QR Code" style="width:80px; height:80px;" />
-</div>
+        <!-- Footer Old-->
+        <!-- <div style="text-align: center; font-size: 12px;">
+            <div style="display:flex; justify-content: space-around; align-items:center;">
+
+                <div>
+                    <p style="font-weight: bold;"> ${trxnType === 'asset' ? '' : 'مزید '}
+                        معلومات یا شرعی رہنمائی کے لیے:</p>
+                    ${CONFIG.Footer_Names}
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <img src="${qrDataUrl}" alt="QR Code" style="width:80px; height:80px;" />
+                </div>
             </div>
             <div style="margin-top: 10px; border-top: 1px dashed #165c2f; padding-top: 5px;">
-            <span>Generated By : </span> ${user}
+                <span>Generated By : </span> ${user}
             </div>
+        </div>     -->
+
+        <!-- Footer -->
+<div style="font-size: 12px; margin-top: 15px;">
+  <div style="
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 15px;
+  ">
+    <!-- Info Box -->
+    <div style="
+        flex: 1;
+        background: #f5f9f7;
+        border: 1px solid #cfe0d5;
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.6;
+    ">
+      <div>
+        <p style="font-weight: bold; color: #165c2f; margin: 0 0 6px 0;">
+          ${trxnType === 'asset' ? '' : 'مزید '} معلومات یا شرعی رہنمائی کے لیے:
+        </p>
+        <div style="font-size: 12px; color: #333;">
+          ${CONFIG.Footer_Names}
         </div>
+      </div>
+    </div>
+
+    <!-- QR Box -->
+    <div style="
+        width: 110px;
+        background: #fff;
+        border: 2px dashed #165c2f81;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+    ">
+      <img src="${qrDataUrl}" alt="QR Code" 
+           style="width:90px; height:90px;" />
+    </div>
+  </div>
+
+  <!-- Generated By -->
+  <div style="margin-top: 10px; text-align:center; font-size: 11px; color:#555;">
+    <span style="border-top:1px solid #ddd; padding-top:4px; display:inline-block;">
+      Generated By : ${user}
+    </span>
+  </div>
+</div>
+    
         </div>
     `;
 
@@ -749,7 +906,7 @@ const qrDataUrl = await QRCode.toDataURL(url +'/receipt/'+ viewTransaction?._id 
 
 
     const downloadPdf = (transactions) => {
-    transactions = [...transactions].reverse();
+        transactions = [...transactions].reverse();
 
         const totalAmount = trxnType !== 'asset'
             ? transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
