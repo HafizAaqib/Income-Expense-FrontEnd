@@ -111,7 +111,7 @@ const MonthlyFees = () => {
       paidBy: student?.fatherName || "",
       phoneNumber: student?.contact || "",
       paymentDate: dayjs(), // default today
-      description: `Monthly fee for ${student?.name} - ${dayjs(month).format("MMM YYYY")}`,
+      description: `Monthly Fee for ${student?.name}`, // - ${dayjs(month).format("MMM YYYY")}`,
     });
     setIsPayModalOpen(true);
   };
@@ -296,7 +296,7 @@ const MonthlyFees = () => {
               title={
                 <div className="d-flex justify-content-between align-items-center">
                   <span>Unpaid</span>
-                  <Badge count={filteredUnpaid.length} />
+                  <Badge count={filteredUnpaid.length} color="orange" />
                 </div>
               }
               size="small"

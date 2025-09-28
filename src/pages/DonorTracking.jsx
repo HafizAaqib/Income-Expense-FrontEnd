@@ -170,6 +170,12 @@ const DonorTracking = () => {
             render: (v) => Number(v || 0).toLocaleString(),
         },
         {
+            title: "Date",
+            dataIndex: "date",
+            align: "center",
+            render: (v) => Number(v || 0).toLocaleString(),
+        },
+        {
             title: "Actions",
             align: "center",
             render: (donor) => (
@@ -222,7 +228,9 @@ const DonorTracking = () => {
                 },
             ]
             : []),
-        { title: "Description", dataIndex: "description", align: "center", responsive: ["md"] },
+        { title: "Description", dataIndex: "description", align: "center", responsive: ["md"] 
+           , className: 'description-column'
+        },
     ];
 
     return (
@@ -281,45 +289,51 @@ const DonorTracking = () => {
 
                 <div className="row g-3">
                     {statusFilter !== 'paid' && <div className={`col-12 ${statusFilter === "all" ? "col-lg-5" : "col-lg-12"}`}>
-                        <Card
-                            title={
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <span>Unpaid</span>
-                                    <Badge count={filteredUnpaid.length} color="orange" />
-                                </div>
-                            }
-                            size="small"
-                            bordered
-                        >
-                            <Table
-                                dataSource={filteredUnpaid}
-                                columns={unpaidColumns}
-                                rowKey="_id"
-                                loading={loading}
-                                pagination={{ pageSize: 7 }}
-                            />
-                        </Card>
+                        <div className="transaction-table-wrapper">
+                            <Card
+                                title={
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <span>Unpaid</span>
+                                        <Badge count={filteredUnpaid.length} color="orange" />
+                                    </div>
+                                }
+                                size="small"
+                                bordered
+                            >
+
+                                <Table
+                                    dataSource={filteredUnpaid}
+                                    columns={unpaidColumns}
+                                    rowKey="_id"
+                                    loading={loading}
+                                    pagination={{ pageSize: 7 }}
+                                />
+                            </Card>
+                        </div>
                     </div>
                     }
                     {statusFilter !== 'unpaid' && <div className={`col-12 ${statusFilter === "all" ? "col-lg-7" : "col-lg-12"}`}>
-                        <Card
-                            title={
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <span>Paid</span>
-                                    <Badge count={filteredPaid.length} color="green" />
-                                </div>
-                            }
-                            size="small"
-                            bordered
-                        >
-                            <Table
-                                dataSource={filteredPaid}
-                                columns={paidColumns}
-                                rowKey="_id"
-                                loading={loading}
-                                pagination={{ pageSize: 7 }}
-                            />
-                        </Card>
+                        <div className="transaction-table-wrapper">
+
+                            <Card
+                                title={
+                                    <div className="d-flex justify-content-between align-items-center">
+                                        <span>Paid</span>
+                                        <Badge count={filteredPaid.length} color="green" />
+                                    </div>
+                                }
+                                size="small"
+                                bordered
+                            >
+                                <Table
+                                    dataSource={filteredPaid}
+                                    columns={paidColumns}
+                                    rowKey="_id"
+                                    loading={loading}
+                                    pagination={{ pageSize: 7 }}
+                                />
+                            </Card>
+                        </div>
                     </div>
                     }
                 </div>
@@ -347,12 +361,12 @@ const DonorTracking = () => {
                     >
                         <Select placeholder="Select Income Category">
                             {categories
-                            .filter(cat => cat.status === 1) // exclude hidden categories
-                            .map((c) => (
-                                <Option key={c._id} value={c._id}>
-                                    {c.name}
-                                </Option>
-                            ))}
+                                .filter(cat => cat.status === 1) // exclude hidden categories
+                                .map((c) => (
+                                    <Option key={c._id} value={c._id}>
+                                        {c.name}
+                                    </Option>
+                                ))}
                         </Select>
                     </Form.Item>
 

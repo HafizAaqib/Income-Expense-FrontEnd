@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [topIncome, setTopIncome] = useState([]);
   const [topExpense, setTopExpense] = useState([]);
 
-  const [notifications, setNotifications] = useState({ duePayments: [], unpaidStudents: [], unpaidDonors: [] });
+  const [notifications, setNotifications] = useState({ duePayments: [], unpaidStudents: [], unpaidDonors: [], unpaidStaff: [] });
 
   const pieColors = ['#00C49F', '#FF8042', '#0088FE', '#FFBB28', '#FF6666'];
 
@@ -168,33 +168,61 @@ const Dashboard = () => {
           {/* Summary Cards */}
           <Row gutter={16} style={{ marginBottom: 24 }} align="stretch">
             <Col span={8}>
-              <Card style={{ height: '100%' }}>
+              <Card
+                style={{
+                  height: '100%',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #e6f7e6, #ffffff)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                }}
+              >
                 <Statistic
                   title="🟢 Total Income"
                   value={summary.incomeTotal}
-                  valueStyle={{ color: 'green' }}
+                  valueStyle={{ color: 'green', fontWeight: 600 }}
                 />
               </Card>
             </Col>
+
             <Col span={8}>
-              <Card style={{ height: '100%' }}>
+              <Card
+                style={{
+                  height: '100%',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #fff0f0, #ffffff)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                }}
+              >
                 <Statistic
                   title="🔴 Total Expense"
                   value={summary.expenseTotal}
-                  valueStyle={{ color: '#f3491af7' }}
+                  valueStyle={{ color: '#f3491af7', fontWeight: 600 }}
                 />
               </Card>
             </Col>
+
             <Col span={8}>
-              <Card style={{ height: '100%' }}>
+              <Card
+                style={{
+                  height: '100%',
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #f0f7ff, #ffffff)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                }}
+              >
                 <Statistic
                   title="🔵 Balance"
                   value={summary.balance}
-                  valueStyle={{ color: summary.balance >= 0 ? 'blue' : '#f3491af7' }}
+                  valueStyle={{
+                    color: summary.balance >= 0 ? '#1a71f3f7' : '#f3491af7',
+                    fontWeight: 600,
+                  }}
                 />
               </Card>
             </Col>
           </Row>
+
+
 
 
           {/* Charts */}
@@ -233,7 +261,7 @@ const Dashboard = () => {
               <Card
                 title={`Top ${selectedType === 'Income' ? 'Donations / Income' : 'Expenses'} (${dayjs().month(selectedMonth - 1).format('MMMM')} ${selectedYear})`}
               >
-                
+
                 <Table
                   dataSource={selectedType === 'Income' ? topIncome : topExpense}
                   rowKey={(record, idx) => record.receiptNumber || idx}
@@ -254,7 +282,7 @@ const Dashboard = () => {
                       align: 'center',
                       onCell: () => ({
                         style: {
-                          maxWidth: 200,       
+                          maxWidth: 200,
                           whiteSpace: 'normal',
                           wordBreak: 'break-word',
                           textAlign: 'center',
@@ -314,7 +342,7 @@ const Dashboard = () => {
                       align: 'center',
                       onCell: () => ({
                         style: {
-                          maxWidth: 200,   
+                          maxWidth: 200,
                           whiteSpace: 'normal', // allow wrapping
                           wordBreak: 'break-word',
                           textAlign: 'center',
@@ -375,6 +403,7 @@ const Dashboard = () => {
                   columns={[
                     { title: "Donor", dataIndex: "name", align: "center" },
                     { title: "Commitment", dataIndex: "monthlyCommitment", align: "center" },
+                    { title: "Date", dataIndex: "date", align: "center" },
                     { title: "Contact", dataIndex: "contact", align: "center" },
                     {
                       title: "Address",
@@ -410,6 +439,29 @@ const Dashboard = () => {
               </Card>
             </Col>
           }
+          {notifications.unpaidStaff && notifications.unpaidStaff.length > 0 &&
+            <Col span={24} style={{ marginTop: 16 }}>
+              <Card title={
+                <div className="d-flex justify-content-between align-items-center">
+                  <span>Unpaid Staff Salaries</span>
+                  <Badge count={notifications.unpaidStaff.length} color="orange" />
+                </div>
+              }>
+                <Table
+                  dataSource={notifications.unpaidStaff}
+                  rowKey="_id"
+                  pagination={false}
+                  columns={[
+                    { title: "Name", dataIndex: "name", align: "center" },
+                    { title: "Designation", dataIndex: "designation", align: "center", responsive: ["md"] },
+                    { title: "Contact", dataIndex: "contact", align: "center" },
+                    { title: "Monthly Salary", dataIndex: "monthlySalary", align: "center" },
+                  ]}
+                />
+              </Card>
+            </Col>
+          }
+
         </Row>
       )}
 

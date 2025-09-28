@@ -64,7 +64,7 @@ const Donors = () => {
     try {
       const values = await form.validateFields();
       let payload = { ...values };
-            if (selectedEntity) payload.entity = selectedEntity.EntityId;
+      if (selectedEntity) payload.entity = selectedEntity.EntityId;
 
       if (editing) {
         await axios.put(`${API}/donors/${editing._id}`, payload, {
@@ -97,16 +97,48 @@ const Donors = () => {
   };
 
   const columns = [
-    { title: "Name", dataIndex: "name", align: "center" },
-    { title: "Contact", dataIndex: "contact", align: "center" },
+    // { title: "Name", dataIndex: "name", align: "center" },
+    // { title: "Contact", dataIndex: "contact", align: "center", responsive: ['md'] },
     {
-      title: "Monthly Commitment",
+      title: "Name",
+      align: "center",
+      responsive: ["xs"],
+      render: (record) => `${record.name} - ${record.contact || ""}`,
+    }, { title: "Name", dataIndex: "name", align: "center", responsive: ['md'], },
+    {
+      title: "Contact",
+      dataIndex: "contact",
+      align: "center",
+      responsive: ['md'],
+    },
+    {
+      title: "Amount",
       dataIndex: "monthlyCommitment",
       align: "center",
       render: (v) => Number(v || 0).toLocaleString(),
+      responsive: ['xs'],
     },
-    { title: "Status", dataIndex: "status", align: "center" },
-    { title: "Address", dataIndex: "address", align: "center" },
+    {
+      title: "Monthly Commitment (Amount)",
+      dataIndex: "monthlyCommitment",
+      align: "center",
+      render: (v) => Number(v || 0).toLocaleString(),
+      responsive: ['md'],
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      align: "center",
+      responsive: ['xs'],
+    },
+    {
+      title: "Donation Date",
+      dataIndex: "date",
+      align: "center",
+      responsive: ['md'],
+    },
+    { title: "Status", dataIndex: "status", align: "center", responsive: ['md'] },
+    { title: "Address", dataIndex: "address", align: "center", responsive: ['md'] },
     {
       title: "Actions",
       align: "center",
@@ -186,13 +218,16 @@ const Donors = () => {
           />
         </div>
 
-        <Table
-          dataSource={donors}
-          columns={columns}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 7 }}
-        />
+        <div className="transaction-table-wrapper">
+
+          <Table
+            dataSource={donors}
+            columns={columns}
+            rowKey="_id"
+            loading={loading}
+            pagination={{ pageSize: 7 }}
+          />
+        </div>
       </div>
 
       {/* Modal */}
@@ -206,8 +241,8 @@ const Donors = () => {
         <Form
           form={form}
           layout="horizontal"
-          labelCol={{ span: 6 }}
-          wrapperCol={{ span: 18 }}
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
           style={{ maxWidth: "100%" }}
         >
           <Form.Item
@@ -220,7 +255,10 @@ const Donors = () => {
           <Form.Item name="contact" label="Contact">
             <Input />
           </Form.Item>
-          <Form.Item name="monthlyCommitment" label="Commitment">
+          <Form.Item name="monthlyCommitment" label="Commitment (Amount)">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item name="date" label="Donation Date">
             <Input type="number" />
           </Form.Item>
           <Form.Item name="status" label="Status" initialValue="active">

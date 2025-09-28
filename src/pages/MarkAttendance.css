@@ -1,0 +1,28 @@
+/* Fix radio button styles */
+.attendance-radio-group .ant-radio-button-wrapper {
+  border: 1px solid var(--color) !important;
+  color: var(--color) !important;
+  background: white !important;
+  text-align: center;
+}
+
+.attendance-radio-group .ant-radio-button-wrapper-checked {
+  background: var(--color) !important;
+  color: white !important;
+}
+
+/* Fix the annoying blue bar on left side */
+.attendance-radio-group .ant-radio-button-wrapper-checked::before {
+  background-color: var(--color) !important;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .attendance-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 12px;
+    justify-content: center;
+  }
+}

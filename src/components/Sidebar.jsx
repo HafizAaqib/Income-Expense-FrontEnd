@@ -21,6 +21,9 @@ import {
   GiftOutlined,
   DownSquareOutlined,
   BellFilled,
+  IdcardOutlined,
+  SolutionOutlined,
+  GatewayOutlined,
 } from '@ant-design/icons';
 import { useState } from 'react';
 import './Sidebar.css';
@@ -31,12 +34,14 @@ import axios from "axios";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
-const [hasDue, setHasDue] = useState(false);
+  const [hasDue, setHasDue] = useState(false);
 
   const [openSections, setOpenSections] = useState({
     main: true,
     manage: false,
     students: false,
+    staff: false,
+    graveyard: false,
     income: true,
     expense: true,
     support: false,
@@ -59,24 +64,24 @@ const [hasDue, setHasDue] = useState(false);
 
   useEffect(() => {
     console.log('useEffect')
-  const checkDue = async () => {
-    console.log('useEffect2')
+    const checkDue = async () => {
+      console.log('useEffect2')
 
-    try {
-      const API = import.meta.env.VITE_API_BASE_URL;
-      const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
-      let url = `${API}/due-payments/has-due`;
-      if (selectedEntity) url += `?entity=${selectedEntity.EntityId}`;
-      const res = await axios.get(url, { headers: { "X-Client": window.location.hostname.split(".")[0] } });      
-      setHasDue(res.data.hasDue);
-    } catch (err){
-      console.log('err' , err)
-      setHasDue(false);
-    }
-  };
+      try {
+        const API = import.meta.env.VITE_API_BASE_URL;
+        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+        let url = `${API}/due-payments/has-due`;
+        if (selectedEntity) url += `?entity=${selectedEntity.EntityId}`;
+        const res = await axios.get(url, { headers: { "X-Client": window.location.hostname.split(".")[0] } });
+        setHasDue(res.data.hasDue);
+      } catch (err) {
+        console.log('err', err)
+        setHasDue(false);
+      }
+    };
 
-  checkDue();
-}, []);
+    checkDue();
+  }, []);
   const logoutHandler = () => {
     localStorage.removeItem('user');
     message.success('Logout Successfully');
@@ -113,14 +118,14 @@ const [hasDue, setHasDue] = useState(false);
           {hasDue && <div className="tgleBtnDiv bellBtn"
             style={{ backgroundColor: "#20c997" }}
             onClick={(e) => {
-            navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
-          }}
-            >
+              navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
+            }}
+          >
             <div className="tgleBtnIcon">
               <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
             </div>
-          </div> }
-          {hasDue && <div className='notifySign'></div> }
+          </div>}
+          {hasDue && <div className='notifySign'></div>}
 
         </div>
         <div
@@ -156,7 +161,7 @@ const [hasDue, setHasDue] = useState(false);
               {hasEntities && <DownSquareOutlined style={{ fontSize: "1.2rem", marginLeft: "6px", marginTop: "0.8rem" }} />}
             </div>
           }
-         
+
         </div>
 
         {!collapsed && <nav className="nav flex-column px-2">
@@ -182,22 +187,22 @@ const [hasDue, setHasDue] = useState(false);
                     <div className='d-md-none'></div>
                     <div className='d-none d-md-flex' style={{ display: "Flex" }}>
 
-                {hasDue &&
-                      <div className="tgleBtnDiv bellBtn bellBtn2"
-                        style={{ backgroundColor: "#20c997" }}
-                        onClick={(e) => {
-            e.preventDefault(); // stop NavLink navigation
-            navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
-          }}
+                      {hasDue &&
+                        <div className="tgleBtnDiv bellBtn bellBtn2"
+                          style={{ backgroundColor: "#20c997" }}
+                          onClick={(e) => {
+                            e.preventDefault(); // stop NavLink navigation
+                            navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
+                          }}
                         >
-                        <div className="tgleBtnIcon">
-                          <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
-                        </div>
-                      </div> }
-                      {hasDue && <div className='notifySign'></div> }
+                          <div className="tgleBtnIcon">
+                            <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
+                          </div>
+                        </div>}
+                      {hasDue && <div className='notifySign'></div>}
 
                     </div>
-                   
+
                   </div>
 
                 </NavLink>
@@ -295,6 +300,40 @@ const [hasDue, setHasDue] = useState(false);
               </NavLink>
             </>
           )}
+
+          <div
+            className="menu-section-title d-flex justify-content-between align-items-center"
+            onClick={() => toggleSection("staff")}
+            style={{ cursor: "pointer" }}
+          >
+            Staff <DownOutlined rotate={openSections.staff ? 180 : 0} />
+          </div>
+          {openSections.staff && (
+            <>
+              <NavLink to="/staff" className="nav-link text-white" onClick={autoCollapse}>
+                <IdcardOutlined /> All Staff
+              </NavLink>
+              <NavLink to="/staffSalary" className="nav-link text-white" onClick={autoCollapse}>
+                <SolutionOutlined /> Staff Salaries
+              </NavLink>
+            </>
+          )}
+
+<div
+  className="menu-section-title d-flex justify-content-between align-items-center"
+  onClick={() => toggleSection("graveyard")}
+  style={{ cursor: "pointer" }}
+>
+  Graveyard <DownOutlined rotate={openSections.graveyard ? 180 : 0} />
+</div>
+{openSections.graveyard && (
+  <>
+    <NavLink to="/graveReservations" className="nav-link text-white" onClick={autoCollapse}>
+      <GatewayOutlined /> Grave Reservations
+    </NavLink>
+  </>
+)}
+
 
           <div
             className="menu-section-title d-flex justify-content-between align-items-center"

@@ -15,6 +15,11 @@ import MonthlyFees from './pages/MonthlyFees'
 import Donors from './pages/Donors'
 import DonorTracking from './pages/DonorTracking'
 import Receipt from './pages/Receipt'
+import Staff from './pages/Staff'
+import StaffSalaries from './pages/StaffSalaries'
+import MarkAttendance from './pages/MarkAttendance'
+import ViewAttendance from './pages/ViewAttendance'
+import GraveReservations from './pages/GraveReservations'
 
 function App() {
   let savedUser = 'null';
@@ -73,10 +78,16 @@ function App() {
                     <Route path="/assets" element={<Transactions type="asset" />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/students" element={<Students />} />
+                    <Route path="/staff" element={<Staff />} />
+                    <Route path="/staffSalary" element={<StaffSalaries />} />
                     <Route path="/duePayments" element={<DuePayments />} />
                     <Route path="/monthlyfee" element={<MonthlyFees />} />
                     <Route path="/donors" element={<Donors />} />
                     <Route path="/donorTracking" element={<DonorTracking />} />
+                    <Route path="/markAttendance" element={<MarkAttendance />} />
+                    <Route path="/viewAttendance" element={<ViewAttendance />} />
+                    <Route path="/graveReservations" element={<GraveReservations />} />
+                    
                   </Routes>
                 </div>
               </div>

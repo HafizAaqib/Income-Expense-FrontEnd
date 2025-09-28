@@ -156,9 +156,6 @@ const Transactions = ({ type }) => {
         }
     };
 
-    // const CLOUD_NAME = "drinjgbm5";
-    // const UPLOAD_PRESET = "FaizaneHajveriImages";
-
     // Run once on mount: set default date range
     useEffect(() => {
         const startOfMonth = dayjs().startOf('month');
