@@ -1,143 +1,265 @@
-import { useEffect, useState } from "react";
-import { Table, DatePicker, Button, message, Card, Radio, Space, Row, Col } from "antd";
+import { useEffect, useState, useCallback } from "react";
+import { Table, DatePicker, Button, message, Card, Radio, Space, Row, Col, Input } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
 import "./MarkAttendance.css";
-import { SaveOutlined } from "@ant-design/icons";
+import { SaveOutlined, ReloadOutlined } from "@ant-design/icons";
+
+const { TextArea } = Input;
 
 const attendanceOptions = [
-    { value: 1, label: "Present", color: "#28a745" },
-    { value: 2, label: "Absent", color: "#dc3545" },
-    { value: 3, label: "Leave", color: "#fd7e14" },
-    { value: 4, label: "Weekend", color: "#007bff" },
-    { value: 5, label: "Holiday", color: "#6f42c1" },
+    { value: 1, label: "Present", color: "#28a745" }, // Green
+    { value: 4, label: "Half-Day", color: "#968c03ff" }, // Brown/Yellow
+    { value: 2, label: "Absent", color: "#dc3545" }, // Red
+    { value: 3, label: "Leave", color: "#fd7e14" }, // Orange
+    { value: 5, label: "Weekend", color: "#007bff" }, // Blue
+    { value: 6, label: "Holiday", color: "#6f42c1" }, // Purple
+    { value: 0, label: "Not Marked", color: "#6c757d" }, // Grey - For initial state/not marked
 ];
 
 const MarkAttendance = () => {
-    const [students, setStudents] = useState([]);
+    const [dailyRecords, setDailyRecords] = useState([]); // Array of { _id, name, status, remarks, ... }
     const [date, setDate] = useState(dayjs());
-    const [attendance, setAttendance] = useState({});
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
 
     const API = import.meta.env.VITE_API_BASE_URL;
     const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
+    
     const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+    const entityId = selectedEntity?.EntityId;
 
-    const fetchStudents = async () => {
+    const entityType = "Student";  // It has two total options for now :- enum: ["Student", "Staff"] 
+
+    // --- Data Fetching (Combines fetching student list and daily attendance data) ---
+    const fetchDailyRecords = useCallback(async (selectedDate) => {
+        setDataLoading(true);
         try {
-            let url = `${API}/students?status=active`;
-            if (selectedEntity) url += `&entity=${selectedEntity.EntityId}`;
-            const res = await axios.get(url, { headers: clientHeader });
-            setStudents(res.data.students || []);
-        } catch {
-            message.error("Failed to load students");
+            const res = await axios.get(`${API}/attendance/daily-records`, {
+                params: { 
+                    date: selectedDate.format("YYYY-MM-DD"),
+                    entityType: entityType,
+                    entity: entityId
+                },
+                headers: clientHeader,
+            });
+            
+            // The backend is responsible for merging student list and attendance data
+            const fetchedRecords = res.data.records.map(record => ({
+                ...record,
+                status: record.status === undefined ? 0 : record.status, 
+            }));
+            
+            setDailyRecords(fetchedRecords);
+            
+        } catch (error) {
+            messageApi.error(error.response?.data?.message || "Failed to fetch daily records.");
+            setDailyRecords([]);
+        } finally {
+            setDataLoading(false);
         }
-    };
+    }, [API, clientHeader, messageApi, entityType, entityId]); // dependency on entityId added
 
     useEffect(() => {
-        fetchStudents();
-    }, []);
+        // Only fetch if entityId is available or if we are loading all (i.e. if entityId is null/undefined)
+        if (entityId !== undefined || selectedEntity === null) { 
+            fetchDailyRecords(date);
+        } else {
+             // Handle case where entity loading may still be pending if selectedEntity is being fetched dynamically
+             // For now, assume it's available or null.
+        }
+    }, [date,  entityId, selectedEntity]);
+
+    // --- Handlers ---
+    
+    const handleDateChange = (newDate) => {
+        if (newDate) {
+            setDate(newDate);
+        }
+    };
+
+    const handleAttendanceChange = (studentId, newStatus) => {
+        setDailyRecords(prevRecords => 
+            prevRecords.map(record => 
+                record._id === studentId 
+                    ? { ...record, status: newStatus } 
+                    : record
+            )
+        );
+    };
+
+    const handleRemarksChange = (studentId, e) => {
+        setDailyRecords(prevRecords => 
+            prevRecords.map(record => 
+                record._id === studentId 
+                    ? { ...record, remarks: e.target.value } 
+                    : record
+            )
+        );
+    };
+
+    const handleMarkAll = (statusToMark) => {
+        setDailyRecords(prevRecords => 
+            prevRecords.map(record => 
+                ({ ...record, status: statusToMark })
+            )
+        );
+    };
 
     const handleSave = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const payload = {
-                date: date.toISOString(),
-                records: students.map(s => ({
-                    studentId: s._id,
-                    status: attendance[s._id] || 0,
-                })),
-                user: JSON.parse(localStorage.getItem("user"))?._id,
-            };
-            await axios.post(`${API}/attendance/bulk`, payload, { headers: clientHeader });
-            message.success("Attendance saved successfully");
-        } catch (err) {
-            message.error(err?.response?.data?.message || "Save failed");
+            // Prepare the data to send to the backend
+            const attendancePayload = dailyRecords.map(record => ({
+                personId: record._id,
+                status: record.status, 
+                remarks: record.remarks,
+                // Tasks/tasksRemarks are omitted here as this is the MarkAttendance page
+            }));
+            
+            // Use the single markAttendanceAndTasks endpoint
+            await axios.post(`${API}/attendance`, {
+                date: date.format("YYYY-MM-DD"),
+                entityType: entityType,
+                records: attendancePayload,
+            }, { headers: clientHeader });
+
+            messageApi.success("Attendance saved successfully!");
+
+        } catch (error) {
+            messageApi.error(error.response?.data?.message || "Failed to save attendance.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    const markAll = (statusValue) => {
-        const updated = {};
-        students.forEach(s => {
-            updated[s._id] = statusValue;
-        });
-        setAttendance(updated);
-    };
-
+    // --- Table Columns ---
     const columns = [
-        { title: "Student Name", dataIndex: "name", key: "name", align: "center" },
+        // {
+        //     title: "#",
+        //     key: "serial",
+        //     render: (text, record, index) => index + 1,
+        //     width: 50,
+        // },
         {
-            title: `Attendance for ${date.format("dddd DD MMMM YYYY")}`,
-            key: "attendance",
-            align: "center",
-            render: (record) => (
+            title: "Student Name",
+            dataIndex: "name",
+            key: "name",
+            fixed: 'left',
+            width: 70,
+            align: 'center',
+            // sorter: (a, b) => a.name.localeCompare(b.name),
+        },
+        {
+            title: "Attendance Status",
+            key: "status",
+            width: 300,
+            align: 'center',
+            render: (text, record) => (
+                <div style={{ maxWidth: '50vw'}}>
                 <Radio.Group
-                    className="attendance-radio-group"
-                    value={attendance[record._id]}
-                    onChange={(e) => setAttendance({ ...attendance, [record._id]: e.target.value })}
+                    className="attendance-radio-group" // Uses MarkAttendance.css
+                    value={record.status}
+                    onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
+                    buttonStyle="solid"
                 >
-                    {attendanceOptions.map(opt => (
-                        <Radio.Button
-                            key={opt.value}
+                    {attendanceOptions
+                        .filter(opt => opt.value !== 0 ) // Hide "Not Marked"from daily marking
+                        .map(opt => (
+                        <Radio.Button 
+                            key={opt.value} 
                             value={opt.value}
-                            className="attendance-radio"
-                            style={{ "--color": opt.color }}
+                            style={{ 
+                                '--color': opt.color
+                                , minWidth: '0px',paddingLeft: '10px' ,paddingRight: '10px' 
+                            }}
                         >
                             {opt.label}
                         </Radio.Button>
                     ))}
                 </Radio.Group>
+                </div>
             ),
-        }
-
+        },
+        {
+            title: "Remarks",
+            dataIndex: "remarks",
+            key: "remarks",
+            width: 150,
+            align: 'center',
+            render: (text, record) => (
+                <TextArea style={{textAlign : 'center'}}
+                    value={text}
+                    onChange={(e) => handleRemarksChange(record._id, e)}
+                    // placeholder="Enter remarks (optional)"
+                    autoSize={{ minRows: 1, maxRows: 3 }}
+                />
+            ),
+        },
     ];
 
     return (
-        <div >
-            <Card variant="borderless" style={{ boxShadow:"none"}}>
-                <div className="mb-3">
+        <div style={{ minWidth: 300 }}>
+            {contextHolder}
+            <Card title={`Mark Daily Attendance (${entityType})`} bordered={false}>
+                
+                {/* Header/Controls Section */}
+                <div style={{ marginBottom: 20 }}>
                     <Row gutter={[16, 16]} align="middle">
-                        {/* Title - always left */}
+                        
+                        {/* Date Picker */}
                         <Col xs={24} md={6}>
-                            <h4 className="m-0">Mark Attendance</h4>
+                            <Space direction="vertical" style={{ width: '100%' }}>
+                                <label style={{ fontWeight: 'bold' }}>Select Date:</label>
+                                <DatePicker
+                                    style={{ width: "100%" }}
+                                    value={date}
+                                    onChange={handleDateChange}
+                                    format="YYYY-MM-DD"
+                                    allowClear={false}
+                                    disabledDate={(current) => current && current.valueOf() > dayjs().endOf('day').valueOf()} // Disable future dates
+                                />
+                            </Space>
                         </Col>
 
-                        {/* Date + Mark All (centered on desktop) */}
-                        <Col xs={24} md={12}>
-                            <div className="d-flex flex-column flex-md-row justify-content-md-center align-items-center gap-2">
-                                <DatePicker
-                                    value={date}
-                                    onChange={setDate}
-                                    style={{ width: 200 }}
-                                    format="DD MMM YYYY"
-                                />
-                                <div>
+                        {/* Mark All Buttons */}
+                        <Col xs={24} md={12} className="text-center">
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                
                                 <Button
-                                    onClick={() => markAll(4)}
-                                    style={{
-                                        border: "1px solid #007bff",
-                                        color: "#007bff"
-                                    }}
+                                    type="primary"
+                                    onClick={() => handleMarkAll(1)} // Present
+                                    style={{ background: '#28a745', borderColor: '#28a745'}}
                                 >
-                                    Mark All Weekend
+                                    Mark All : Present
                                 </Button>
                                 <Button
-                                    onClick={() => markAll(5)}
-                                    style={{
-                                        border: "1px solid #6f42c1",
-                                        color: "#6f42c1",
-                                            marginLeft: "0.5rem"
-                                    }}
+                                    type="primary"
+                                    onClick={() => handleMarkAll(5)} // Weekend
+                                    style={{ background: '#007bff', borderColor: '#007bff' }}
                                 >
-                                    Mark All Holiday
+                                    Mark All : Weekend
                                 </Button>
-                                </div>
-
+                                <Button
+                                    type="primary"
+                                    onClick={() => handleMarkAll(6)} // Holiday
+                                    style={{ background: '#6f42c1', borderColor: '#6f42c1' }}
+                                >
+                                    Mark All : Holiday
+                                </Button>
+                                
+                                <Button
+                                    icon={<ReloadOutlined />}
+                                    onClick={() => fetchDailyRecords(date)}
+                                    loading={dataLoading}
+                                >
+                                    Reload Data
+                                </Button>
                             </div>
                         </Col>
 
-                        {/* Save button - right on desktop, full row on mobile */}
+                        {/* Save button */}
                         <Col xs={24} md={6} className="text-md-end text-center">
                             <Button
                                 type="primary"
@@ -157,12 +279,13 @@ const MarkAttendance = () => {
 
                 {/* Table */}
                 <Table
-                    dataSource={students}
+                    dataSource={dailyRecords}
                     columns={columns}
                     rowKey="_id"
-                    pagination={false}
+                     pagination={{ pageSize: 100 }}
                     bordered
-                    scroll={{ x: true }}
+                    loading={dataLoading}
+                    scroll={{ x: 850 }}
                 />
             </Card>
         </div>

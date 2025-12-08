@@ -52,8 +52,8 @@ const Login = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user) {
+    console.log('login page :- user : ' , user)
+    if (user && user.userName && user._id) {
       navigate('/');
     }
   }, [navigate]);

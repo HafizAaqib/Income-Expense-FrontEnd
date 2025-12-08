@@ -22,13 +22,13 @@ import ViewAttendance from './pages/ViewAttendance'
 import GraveReservations from './pages/GraveReservations'
 
 function App() {
-  let savedUser = 'null';
+  let savedUser = null;
   try {
     savedUser = JSON.parse(localStorage.getItem('user'))
   }
   catch (err) {
     localStorage.removeItem('user')
-    savedUser = 'null'
+    savedUser = null
 
   }
   const isAdmin = savedUser?.isAdmin;
@@ -54,9 +54,6 @@ function App() {
               <div className="d-flex flex-column flex-md-row" style={{ height: '100vh' }}>
                 <Sidebar />
                 <div className="flex-grow-1 p-3" style={{ overflowY: 'auto' }}>
-                  {/* <div className="d-flex flex-column flex-md-row">
-                <Sidebar />
-                <div className="flex-grow-1 p-3"> */}
                   <Routes>
                     {/* <Route path="/" element={<Dashboard />} /> */}
                     <Route
@@ -98,8 +95,6 @@ function App() {
 
     </>
 
-    /* <a href=""> <img src={reactLogo} className="logo react" alt="React logo" /> </a> */
-
   )
 }
 
@@ -113,10 +108,10 @@ export function ProtectedRoutes(props) {
     user = null; // in case of malformed JSON
   }
 
-  if (user && user.userName && user._id) {
+  if (user && user.userName && user._id && location.pathname !== "/login") {
     return props.children;
   } else {
-    return <Navigate to='/login' />;
+      return <Navigate to='/login' />;
   }
 }
 
@@ -129,7 +124,7 @@ export function ProtectedAdminRoute({ children }) {
   } catch (error) {
     user = null; // in case of malformed JSON
   }
-  if (!user || !user.isAdmin) {
+  if ((!user || !user.isAdmin) && location.pathname !== "/") { 
     return <Navigate to="/" />;
   }
 

@@ -11,7 +11,7 @@ import {
   BarChartOutlined,
   PlusSquareOutlined,
   MinusSquareOutlined,
-  DownOutlined,
+  DownOutlined ,
   CalendarOutlined,
   TeamOutlined,
   BookOutlined,
@@ -24,18 +24,18 @@ import {
   IdcardOutlined,
   SolutionOutlined,
   GatewayOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Sidebar.css';
-import { message, Modal, Button, Flex } from 'antd';
+import { message, Modal, Button } from 'antd';
 import { CONFIG } from "../pages/clientConfig";
-import { useEffect } from 'react';
 import axios from "axios";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [hasDue, setHasDue] = useState(false);
-
+  // Ensured some sections are closed by default for a clean look
   const [openSections, setOpenSections] = useState({
     main: true,
     manage: false,
@@ -61,21 +61,20 @@ const Sidebar = () => {
   const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
   const isAdmin = savedUser?.isAdmin;
   const canViewOtherUsersData = savedUser?.canViewOtherUsersData;
+  const AllowedPages = CONFIG.PagesToShow ??
+    (JSON.parse(localStorage.getItem("selectedEntity" || "null"))?.PagesToShow);
+
 
   useEffect(() => {
-    console.log('useEffect')
     const checkDue = async () => {
-      console.log('useEffect2')
-
       try {
         const API = import.meta.env.VITE_API_BASE_URL;
-        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity" || "null"));
         let url = `${API}/due-payments/has-due`;
         if (selectedEntity) url += `?entity=${selectedEntity.EntityId}`;
         const res = await axios.get(url, { headers: { "X-Client": window.location.hostname.split(".")[0] } });
         setHasDue(res.data.hasDue);
       } catch (err) {
-        console.log('err', err)
         setHasDue(false);
       }
     };
@@ -102,7 +101,7 @@ const Sidebar = () => {
     window.location.reload();
   };
 
-  const titleText = selectedEntity?.Name || "Income & Expense Management";
+  const titleText = selectedEntity?.Name || "Masjid Management System";
 
   const toggleSection = (key) => {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -110,259 +109,261 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Nav */}
-      <div className="mobile-nav d-md-none text-white p-2 d-flex justify-content-between align-items-center">
-        <div style={{ display: "Flex" }}>
+      {/* Sidebar - main element with gradient and collapse classes */}
+      <div className={`sidebar-gradient ${collapsed ? 'collapsed' : 'open'}`}>
 
-
-          {hasDue && <div className="tgleBtnDiv bellBtn"
-            style={{ backgroundColor: "#20c997" }}
-            onClick={(e) => {
-              navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
-            }}
-          >
-            <div className="tgleBtnIcon">
-              <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
-            </div>
-          </div>}
-          {hasDue && <div className='notifySign'></div>}
-
-        </div>
-        <div
-          className="fw-bold fs-6 d-flex align-items-center"
-          style={{ cursor: hasEntities ? "pointer" : "default", fontFamily: hasEntities ? "NotoNastaliqUrdu" : "" }}
-          onClick={() => hasEntities && setEntityModalOpen(true)}
-        >
-          {titleText}
-          {hasEntities && <DownSquareOutlined style={{ fontSize: "1.2rem", marginLeft: "6px", marginTop: "0.4rem" }} />}
-        </div>
-        <button
-          className="btn btn-success btn-sm"
-          onClick={() => setCollapsed(!collapsed)}
-          style={{ background: "linear-gradient(to bottom right, #029bd2, #20c997)", borderColor: "#ffffff" }}
-        >
-          <MenuOutlined />
-        </button>
-      </div>
-
-      {/* Sidebar */}
-
-      <div className={`sidebar text-white ${collapsed ? 'collapsed' : 'open'}`}>
-        <div className="sidebar-header text-center fw-bold fs-5 d-none d-md-flex justify-content-around align-items-center
-        toggleDiv">
-
-          {/* <div></div> */}
-          {!collapsed &&
+        {/* Sidebar Header/Branding Area - Removed old toggle button */}
+        <div className="sidebar-header-gradient text-center fw-bold d-none d-md-flex justify-content-center align-items-center">
+          {!collapsed ? (
             <div
-              style={{ cursor: hasEntities ? "pointer" : "default", fontFamily: hasEntities ? "NotoNastaliqUrdu" : "" }}
+              className="entity-title-desktop"
               onClick={() => hasEntities && setEntityModalOpen(true)}
             >
-              {titleText}
-              {hasEntities && <DownSquareOutlined style={{ fontSize: "1.2rem", marginLeft: "6px", marginTop: "0.8rem" }} />}
+              <div className="app-main-title-gradient text-white">Masjid Management System</div>
+              {hasEntities && (
+                <div className="entity-name-display-gradient">
+                  {selectedEntity?.Name || "Select Entity"}
+                  <DownSquareOutlined className="entity-dropdown-icon-gradient" />
+                </div>
+              )}
             </div>
-          }
-
+          ) : (
+            <FolderOutlined className="collapsed-app-icon-gradient" />
+          )}
         </div>
 
-        {!collapsed && <nav className="nav flex-column px-2">
+        {/* Navigation Content */}
+        <nav className="nav flex-column sidebar-nav-container-gradient">
+
+          {/* Main Section */}
           {(isAdmin || canViewOtherUsersData) && (
             <>
-              <div
-                className="menu-section-title d-flex justify-content-between align-items-center"
-                onClick={() => toggleSection("main")}
-                style={{ cursor: "pointer" }}
-              >
-                Main <DownOutlined rotate={openSections.main ? 180 : 0} />
-              </div>
-              {openSections.main && (
-                <NavLink to="/" className="nav-link text-white" onClick={autoCollapse}>
-                  <div style={{
-                    display: 'flex', alignItems: "center",
-                    justifyContent: "space-between"
-                  }}>
-                    <div>
-                      <BarChartOutlined /> Dashboard
-
-                    </div>
-                    <div className='d-md-none'></div>
-                    <div className='d-none d-md-flex' style={{ display: "Flex" }}>
-
-                      {hasDue &&
-                        <div className="tgleBtnDiv bellBtn bellBtn2"
-                          style={{ backgroundColor: "#20c997" }}
-                          onClick={(e) => {
-                            e.preventDefault(); // stop NavLink navigation
-                            navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
-                          }}
-                        >
-                          <div className="tgleBtnIcon">
-                            <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
-                          </div>
-                        </div>}
-                      {hasDue && <div className='notifySign'></div>}
-
-                    </div>
-
+              {/* Main Nav Link (Dashboard) */}
+              <NavLink to="/" className="nav-link-gradient nav-link-parent-main text-white" onClick={autoCollapse}>
+                {/* Dashboard content wrapper for bell placement */}
+                <div className="dashboard-content-wrapper">
+                  <div className="nav-link-content">
+                    <BarChartOutlined /> {!collapsed && "Dashboard"}
                   </div>
-
-                </NavLink>
-              )}
+                  {/* Bell/Notification Area for Desktop - RESTORED OLD DESIGN */}
+                  <div className='d-none d-md-flex' style={{ display: "Flex" }}>
+                    {hasDue &&
+                      <div className="tgleBtnDiv bellBtn bellBtn2"
+                        style={{ backgroundColor: "#20c997" }}
+                        onClick={(e) => {
+                          e.preventDefault(); // stop NavLink navigation
+                          navigate("/?tab=Notifications"); // ✅ open dashboard with tab param
+                        }}
+                      >
+                        <div className="tgleBtnIcon">
+                          <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
+                        </div>
+                      </div>}
+                    {hasDue && <div className='notifySign'></div>}
+                  </div>
+                </div>
+              </NavLink>
             </>
           )}
 
+          {/* Manage Section - PARENT MENU */}
           <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
+            className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
             onClick={() => toggleSection("manage")}
-            style={{ cursor: "pointer" }}
           >
-            Manage <DownOutlined rotate={openSections.manage ? 180 : 0} />
+            <div className="title-content">
+                <FolderOutlined />
+                {!collapsed && "MANAGE"}
+            </div>
+            {!collapsed && <DownOutlined style={{fontSize:'1em'}}  rotate={openSections.manage ? 180 : 0} />}
           </div>
           {openSections.manage && (
-            <>
+            <div className='child-menu-container'>
               {isAdmin && (
-                <NavLink to="/users" className="nav-link text-white" onClick={autoCollapse}>
+                <NavLink to="/users" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                   <UserOutlined /> Users
                 </NavLink>
               )}
-
-              <NavLink to="/income-categories" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/income-categories" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <FolderOpenOutlined /> Income Categories
               </NavLink>
-              <NavLink to="/expense-categories" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/expense-categories" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <FolderOpenOutlined /> Expense Categories
               </NavLink>
-              <NavLink to="/asset-types" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/asset-types" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <AppstoreAddOutlined /> Asset Types
               </NavLink>
-              <NavLink to="/donors" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/donors" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <UsergroupAddOutlined /> Regular Donors
               </NavLink>
-            </>
+            </div>
           )}
 
+          {/* Income Section - PARENT MENU */}
           <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
+            className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
             onClick={() => toggleSection("income")}
-            style={{ cursor: "pointer" }}
           >
-            Income <DownOutlined rotate={openSections.income ? 180 : 0} />
+            <div className="title-content">
+                <PlusSquareOutlined />
+                {!collapsed && "INCOME"}
+            </div>
+            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.income ? 180 : 0} />}
           </div>
           {openSections.income && (
-            <>
-              <NavLink to="/donorTracking" className="nav-link text-white" onClick={autoCollapse}>
+            <div className='child-menu-container'>
+              <NavLink to="/donorTracking" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <GiftOutlined /> Donor Tracking
               </NavLink>
-              <NavLink to="/income" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/income" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <PlusSquareOutlined /> Income Records
               </NavLink>
-
-              <NavLink to="/assets" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/assets" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <InsertRowBelowOutlined /> Asset Donations
               </NavLink>
-
-
-            </>
+            </div>
           )}
 
+          {/* Expenses Section - PARENT MENU */}
           <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
+            className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
             onClick={() => toggleSection("expense")}
-            style={{ cursor: "pointer" }}
           >
-            Expenses <DownOutlined rotate={openSections.expense ? 180 : 0} />
+            <div className="title-content">
+                <MinusSquareOutlined />
+                {!collapsed && "EXPENSES"}
+            </div>
+            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.expense ? 180 : 0} />}
           </div>
           {openSections.expense && (
-            <>
-              <NavLink to="/duePayments" className="nav-link text-white" onClick={autoCollapse}>
+            <div className='child-menu-container'>
+              <NavLink to="/duePayments" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <CalendarOutlined /> Due Payments
               </NavLink>
-              <NavLink to="/expense" className="nav-link text-white" onClick={autoCollapse}>
+              <NavLink to="/expense" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <MinusSquareOutlined /> Expense Records
               </NavLink>
-
-            </>
+            </div>
           )}
 
-          <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
-            onClick={() => toggleSection("students")}
-            style={{ cursor: "pointer" }}
-          >
-            Students <DownOutlined rotate={openSections.students ? 180 : 0} />
-          </div>
-          {openSections.students && (
+          {/* Students Section - PARENT MENU */}
+          {AllowedPages && AllowedPages.find(x => x == 'students') &&
             <>
-              <NavLink to="/students" className="nav-link text-white" onClick={autoCollapse}>
-                <TeamOutlined /> All Students
-              </NavLink>
-              <NavLink to="/monthlyfee" className="nav-link text-white" onClick={autoCollapse}>
-                <BookOutlined /> Monthly Fee
-              </NavLink>
+              <div
+                className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
+                onClick={() => toggleSection("students")}
+              >
+                <div className="title-content">
+                    <TeamOutlined />
+                    {!collapsed && "STUDENTS"}
+                </div>
+                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.students ? 180 : 0} />}
+              </div>
+              {openSections.students && (
+                <div className='child-menu-container'>
+                  <NavLink to="/students" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <TeamOutlined /> All Students
+                  </NavLink>
+                  <NavLink to="/monthlyfee" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <BookOutlined /> Monthly Fee
+                  </NavLink>
+                  <NavLink to="/markAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <BookOutlined /> Mark Attendance
+                  </NavLink>
+                  <NavLink to="/viewAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <BookOutlined /> View Attendance
+                  </NavLink>
+                </div>
+              )}
             </>
-          )}
+          }
 
-          <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
-            onClick={() => toggleSection("staff")}
-            style={{ cursor: "pointer" }}
-          >
-            Staff <DownOutlined rotate={openSections.staff ? 180 : 0} />
-          </div>
-          {openSections.staff && (
+          {/* Staff Section - PARENT MENU */}
+          {AllowedPages && AllowedPages.find(x => x == 'staff') &&
             <>
-              <NavLink to="/staff" className="nav-link text-white" onClick={autoCollapse}>
-                <IdcardOutlined /> All Staff
-              </NavLink>
-              <NavLink to="/staffSalary" className="nav-link text-white" onClick={autoCollapse}>
-                <SolutionOutlined /> Staff Salaries
-              </NavLink>
+              <div
+                className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
+                onClick={() => toggleSection("staff")}
+              >
+                <div className="title-content">
+                    <IdcardOutlined />
+                    {!collapsed && "STAFF"}
+                </div>
+                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.staff ? 180 : 0} />}
+              </div>
+              {openSections.staff && (
+                <div className='child-menu-container'>
+                  <NavLink to="/staff" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <IdcardOutlined /> All Staff
+                  </NavLink>
+                  <NavLink to="/staffSalary" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <SolutionOutlined /> Staff Salaries
+                  </NavLink>
+                </div>
+              )}
             </>
-          )}
+          }
 
-<div
-  className="menu-section-title d-flex justify-content-between align-items-center"
-  onClick={() => toggleSection("graveyard")}
-  style={{ cursor: "pointer" }}
->
-  Graveyard <DownOutlined rotate={openSections.graveyard ? 180 : 0} />
-</div>
-{openSections.graveyard && (
-  <>
-    <NavLink to="/graveReservations" className="nav-link text-white" onClick={autoCollapse}>
-      <GatewayOutlined /> Grave Reservations
-    </NavLink>
-  </>
-)}
+          {/* Graveyard Section - PARENT MENU */}
+          {AllowedPages && AllowedPages.find(x => x == 'graveyard') &&
+            <>
+              <div
+                className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
+                onClick={() => toggleSection("graveyard")}
+              >
+                <div className="title-content">
+                    <GatewayOutlined />
+                    {!collapsed && "GRAVEYARD"}
+                </div>
+                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.graveyard ? 180 : 0} />}
+              </div>
+              {openSections.graveyard && (
+                <div className='child-menu-container'>
+                  <NavLink to="/graveReservations" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <GatewayOutlined /> Grave Reservations
+                  </NavLink>
+                </div>
+              )}
+            </>
+          }
 
-
+          {/* Support Section - PARENT MENU */}
           <div
-            className="menu-section-title d-flex justify-content-between align-items-center"
+            className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
             onClick={() => toggleSection("support")}
-            style={{ cursor: "pointer" }}
           >
-            Support <DownOutlined rotate={openSections.support ? 180 : 0} />
+            <div className="title-content">
+                <MessageOutlined />
+                {!collapsed && "SUPPORT"}
+            </div>
+            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.support ? 180 : 0} />}
           </div>
           {openSections.support && (
-            <>
-              <NavLink to="/contact" className="nav-link text-white" onClick={autoCollapse}>
+            <div className='child-menu-container'>
+              <NavLink to="/contact" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <MessageOutlined /> Contact Developer
               </NavLink>
-
-            </>
+            </div>
           )}
-          <button className="nav-link text-white bg-transparent border-0 text-start w-100" onClick={logoutHandler}>
-            <LogoutOutlined /> Logout
+
+          {/* Logout Button */}
+          <button className="nav-link-gradient logout-btn-gradient text-white bg-transparent border-0 text-start w-100" onClick={logoutHandler}>
+            <LogoutOutlined /> {!collapsed && "Logout"}
           </button>
-        </nav>}
+        </nav>
       </div>
 
+      {/* DESKTOP COLLAPSE BUTTON - RESTORED OLD DESIGN/POSITIONING */}
       <div className='d-none d-md-block'
         style={{
           width: "0px",
-          marginLeft: "-1.1rem",
+          marginLeft: collapsed ? "-1.1rem" : "-1.4rem", // Adjusted margin slightly for better positioning
           marginRight: "1.1rem",
           zIndex: 1000,
           marginTop: "2.5rem",
+          position: 'fixed', // Added fixed positioning to ensure it stays next to the sidebar
+          left: collapsed ? '55px' : '260px',
+          transition: 'all 0.3s ease-in-out',
         }}
       >
         <button className="toggleBtn" onClick={() => setCollapsed(!collapsed)}>
@@ -373,7 +374,42 @@ const Sidebar = () => {
             </div>
           </div>
         </button>
+      </div>
 
+
+      {/* Mobile Nav - Uses the full gradient now */}
+      <div className="mobile-nav-gradient d-md-none p-3 d-flex justify-content-between align-items-center">
+        {/* Bell/Notification Area for Mobile - RESTORED OLD DESIGN */}
+        <div style={{ display: "Flex" }}>
+          {hasDue && <div className="tgleBtnDiv bellBtn"
+            style={{ backgroundColor: "#20c997" }}
+            onClick={(e) => {
+              navigate("/?tab=Notifications");
+            }}
+          >
+            <div className="tgleBtnIcon">
+              <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
+            </div>
+          </div>}
+          {hasDue && <div className='notifySign'></div>}
+        </div>
+
+        {/* Title/Entity Selector for Mobile */}
+        <div
+          className="fw-bold d-flex align-items-center mobile-entity-title-gradient"
+          onClick={() => hasEntities && setEntityModalOpen(true)}
+        >
+          {titleText}
+          {hasEntities && <DownSquareOutlined className="entity-dropdown-icon-gradient" />}
+        </div>
+
+        {/* Menu Toggle Button for Mobile */}
+        <button
+          className="btn btn-sm mobile-menu-toggle-btn-gradient"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          <MenuOutlined />
+        </button>
       </div>
 
 
@@ -391,15 +427,8 @@ const Sidebar = () => {
                 key={entity.EntityId}
                 type={selectedEntity?.EntityId === entity.EntityId ? "primary" : "default"}
                 block
-                className="mb-2"
+                className="mb-2 modal-entity-button-gradient"
                 onClick={() => handleEntitySelect(entity)}
-                style={{
-                  background: "linear-gradient(to bottom right, #029bd2, #20c997)",
-                  borderColor: "#20c997",
-                  fontFamily: "NotoNastaliqUrdu",
-                  height: "50px",
-                  margin: "5px 0px",
-                }}
               >
                 {entity.Name}
               </Button>
