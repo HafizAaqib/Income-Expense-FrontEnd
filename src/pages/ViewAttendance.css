@@ -1,0 +1,102 @@
+
+/* --- Calendar Grid Fixes --- */
+/* Helper class to ensure perfect 1/7 width */
+.calendar-col-7-width {
+    flex-basis: calc(100% / 7); /* Use calc to enforce 1/7 width */
+    max-width: calc(100% / 7); 
+}
+
+/* General Calendar Grid Styles */
+.calendar-grid-container {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px;
+}
+
+.calendar-weekday-headers {
+    font-weight: bold;
+    text-align: center;
+    color: #34495e;
+}
+
+.calendar-weekday-headers .calendar-col-7-width {
+    padding: 0 2px;
+}
+
+.calendar-grid-cell {
+    /* linear-gradient(to bottom right, #029bd2, #20c997) */
+    border: 1px solid #029bd22f;
+    border-radius: 4px;
+    min-height: 80px;
+    padding: 5px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: background-color 0.2s;
+    margin-bottom: 2px; /* Add small margin to prevent border overlap on row change */
+    background-color: rgba(35, 181, 235, 0.114) !important;
+}
+
+.calendar-grid-cell:hover {
+    background-color: #f9f9f9 !important;
+}
+
+.empty-cell {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.today-cell {
+    border: 2px solid #029bd2 !important;
+    box-shadow: 0 0 5px rgba(2, 155, 210, 0.3);
+}
+
+/* --- Summary Card Styling --- */
+.summary-card .ant-statistic-title {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.summary-card {
+    border-left-width: 3px !important;
+    border-left-style: solid !important;
+}
+
+/* Custom left borders for visual distinction */
+.present-card { border-left-color: #28a745 !important; }
+.absent-card { border-left-color: #dc3545 !important; }
+.leave-card { border-left-color: #ffc107 !important; }
+.notmarked-card { border-left-color: #6c757d !important; }
+.total-card { border-left-color: #17a2b8 !important; }
+.task-card { border-left-color: #00bfff !important; }
+
+/* --- Responsive adjustments --- */
+@media (max-width: 576px) {
+    /* Ensure Calendar cells are large enough on small screens */
+    .calendar-grid-cell {
+        min-height: 70px;
+        padding: 2px;
+    }
+    .calendar-grid-cell > div:first-child {
+        font-size: 12px !important;
+    }
+    
+    /* Make header controls stack vertically if needed */
+    .ant-card-extra {
+        display: block;
+        width: 100%;
+    }
+    /* This rule on the Row inside extra will centralize controls on mobile */
+    .ant-card-extra .ant-row {
+        justify-content: center !important;
+    }
+    
+    /* Ensure Radio buttons use full width to stack better */
+    .ant-card-extra .ant-radio-group {
+        width: 100%;
+    }
+}

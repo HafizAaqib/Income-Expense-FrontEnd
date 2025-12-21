@@ -17,7 +17,7 @@ const attendanceOptions = [
     { value: 0, label: "Not Marked", color: "#6c757d" }, // Grey - For initial state/not marked
 ];
 
-const MarkAttendance = () => {
+const MarkAttendance = ({ entityType }) => { // entityType : has two total options for now :- enum: ["Student", "Staff"] 
     const [dailyRecords, setDailyRecords] = useState([]); // Array of { _id, name, status, remarks, ... }
     const [date, setDate] = useState(dayjs());
     const [loading, setLoading] = useState(false);
@@ -26,13 +26,11 @@ const MarkAttendance = () => {
 
     const API = import.meta.env.VITE_API_BASE_URL;
     const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
-    
+
     const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
     const entityId = selectedEntity?.EntityId;
-
-    const entityType = "Student";  // It has two total options for now :- enum: ["Student", "Staff"] 
-
-    // --- Data Fetching (Combines fetching student list and daily attendance data) ---
+    
+    // --- Data Fetching (Combines fetching student/staff list and daily attendance data) ---
     const fetchDailyRecords = useCallback(async (selectedDate) => {
         setDataLoading(true);
         try {
@@ -45,7 +43,7 @@ const MarkAttendance = () => {
                 headers: clientHeader,
             });
             
-            // The backend is responsible for merging student list and attendance data
+            // The backend is responsible for merging student/staff list and attendance data
             const fetchedRecords = res.data.records.map(record => ({
                 ...record,
                 status: record.status === undefined ? 0 : record.status, 
@@ -59,19 +57,15 @@ const MarkAttendance = () => {
         } finally {
             setDataLoading(false);
         }
-    }, [API, clientHeader, messageApi, entityType, entityId]); // dependency on entityId added
+    }, [API, clientHeader, messageApi, entityType, entityId]); 
 
     useEffect(() => {
-        // Only fetch if entityId is available or if we are loading all (i.e. if entityId is null/undefined)
         if (entityId !== undefined || selectedEntity === null) { 
             fetchDailyRecords(date);
-        } else {
-             // Handle case where entity loading may still be pending if selectedEntity is being fetched dynamically
-             // For now, assume it's available or null.
         }
-    }, [date,  entityId, selectedEntity]);
+    }, [date, entityId, selectedEntity , entityType]);
 
-    // --- Handlers ---
+    // --- State Handlers ---
     
     const handleDateChange = (newDate) => {
         if (newDate) {
@@ -79,20 +73,20 @@ const MarkAttendance = () => {
         }
     };
 
-    const handleAttendanceChange = (studentId, newStatus) => {
+    const handleAttendanceChange = (selectedId, newStatus) => {
         setDailyRecords(prevRecords => 
             prevRecords.map(record => 
-                record._id === studentId 
+                record._id === selectedId 
                     ? { ...record, status: newStatus } 
                     : record
             )
         );
     };
 
-    const handleRemarksChange = (studentId, e) => {
+    const handleRemarksChange = (selectedId, e) => {
         setDailyRecords(prevRecords => 
             prevRecords.map(record => 
-                record._id === studentId 
+                record._id === selectedId 
                     ? { ...record, remarks: e.target.value } 
                     : record
             )
@@ -110,15 +104,12 @@ const MarkAttendance = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            // Prepare the data to send to the backend
             const attendancePayload = dailyRecords.map(record => ({
                 personId: record._id,
                 status: record.status, 
                 remarks: record.remarks,
-                // Tasks/tasksRemarks are omitted here as this is the MarkAttendance page
             }));
             
-            // Use the single markAttendanceAndTasks endpoint
             await axios.post(`${API}/attendance`, {
                 date: date.format("YYYY-MM-DD"),
                 entityType: entityType,
@@ -136,67 +127,60 @@ const MarkAttendance = () => {
 
     // --- Table Columns ---
     const columns = [
-        // {
-        //     title: "#",
-        //     key: "serial",
-        //     render: (text, record, index) => index + 1,
-        //     width: 50,
-        // },
         {
-            title: "Student Name",
+            title: "#",
+            key: "serial",
+            render: (text, record, index) => index + 1,
+            width: 50,
+        },
+        {
+            title: "Name",
             dataIndex: "name",
             key: "name",
             fixed: 'left',
             width: 70,
-            align: 'center',
-            // sorter: (a, b) => a.name.localeCompare(b.name),
+            sorter: (a, b) => a.name.localeCompare(b.name),
         },
+        // --- START: MERGED COLUMN FOR RESPONSIVENESS ---
         {
-            title: "Attendance Status",
-            key: "status",
-            width: 300,
-            align: 'center',
+            title: "Attendance Status & Remarks",
+            key: "status-remarks",
+            // Set a minimum width for a decent desktop experience, but allow it to collapse on mobile
+            width: 500, 
             render: (text, record) => (
-                <div style={{ maxWidth: '50vw'}}>
-                <Radio.Group
-                    className="attendance-radio-group" // Uses MarkAttendance.css
-                    value={record.status}
-                    onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
-                    buttonStyle="solid"
-                >
-                    {attendanceOptions
+                <div className="attendance-status-remarks-container">
+                    <Radio.Group
+                        className="attendance-radio-group"
+                        value={record.status}
+                        onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
+                        buttonStyle="solid"
+                    >
+                        {attendanceOptions
                         .filter(opt => opt.value !== 0 ) // Hide "Not Marked"from daily marking
-                        .map(opt => (
-                        <Radio.Button 
-                            key={opt.value} 
-                            value={opt.value}
-                            style={{ 
-                                '--color': opt.color
-                                , minWidth: '0px',paddingLeft: '10px' ,paddingRight: '10px' 
-                            }}
-                        >
-                            {opt.label}
-                        </Radio.Button>
-                    ))}
-                </Radio.Group>
+                            .map(opt => (
+                            <Radio.Button 
+                                key={opt.value} 
+                                value={opt.value}
+                                style={{ '--color': opt.color, minWidth: 85 }}
+                            >
+                                {opt.label}
+                            </Radio.Button>
+                        ))}
+                    </Radio.Group>
+                    
+                    {/* Remarks Textarea (Moves below radios on mobile via CSS) */}
+                    <div className="remarks-area">
+                         <TextArea
+                            value={record.remarks}
+                            onChange={(e) => handleRemarksChange(record._id, e)}
+                            placeholder="Remarks"
+                            autoSize={{ minRows: 1, maxRows: 3 }}
+                        />
+                    </div>
                 </div>
             ),
         },
-        {
-            title: "Remarks",
-            dataIndex: "remarks",
-            key: "remarks",
-            width: 150,
-            align: 'center',
-            render: (text, record) => (
-                <TextArea style={{textAlign : 'center'}}
-                    value={text}
-                    onChange={(e) => handleRemarksChange(record._id, e)}
-                    // placeholder="Enter remarks (optional)"
-                    autoSize={{ minRows: 1, maxRows: 3 }}
-                />
-            ),
-        },
+        // --- END: MERGED COLUMN FOR RESPONSIVENESS ---
     ];
 
     return (
@@ -234,7 +218,7 @@ const MarkAttendance = () => {
                                 >
                                     Mark All : Present
                                 </Button>
-                                <Button
+                               <Button
                                     type="primary"
                                     onClick={() => handleMarkAll(5)} // Weekend
                                     style={{ background: '#007bff', borderColor: '#007bff' }}
@@ -282,10 +266,10 @@ const MarkAttendance = () => {
                     dataSource={dailyRecords}
                     columns={columns}
                     rowKey="_id"
-                     pagination={{ pageSize: 100 }}
+                    pagination={{ pageSize: 100 }}
                     bordered
                     loading={dataLoading}
-                    scroll={{ x: 850 }}
+                    scroll={{ x: true }} 
                 />
             </Card>
         </div>

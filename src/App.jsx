@@ -20,6 +20,8 @@ import StaffSalaries from './pages/StaffSalaries'
 import MarkAttendance from './pages/MarkAttendance'
 import ViewAttendance from './pages/ViewAttendance'
 import GraveReservations from './pages/GraveReservations'
+import Tasks from './pages/Tasks'
+import MarkDailyChecklist from './pages/MarkDailyChecklist'
 
 function App() {
   let savedUser = null;
@@ -70,6 +72,8 @@ function App() {
                     <Route path="/income-categories" element={<Categories type="income" />} />
                     <Route path="/expense-categories" element={<Categories type="expense" />} />
                     <Route path="/asset-types" element={<Categories type="asset" />} />
+                    <Route path="/student-checklist" element={<Tasks type="student" />} />
+                    <Route path="/staff-checklist" element={<Tasks type="staff" />} />
                     <Route path="/income" element={<Transactions type="income" />} />
                     <Route path="/expense" element={<Transactions type="expense" />} />
                     <Route path="/assets" element={<Transactions type="asset" />} />
@@ -81,8 +85,12 @@ function App() {
                     <Route path="/monthlyfee" element={<MonthlyFees />} />
                     <Route path="/donors" element={<Donors />} />
                     <Route path="/donorTracking" element={<DonorTracking />} />
-                    <Route path="/markAttendance" element={<MarkAttendance />} />
-                    <Route path="/viewAttendance" element={<ViewAttendance />} />
+                    <Route path="/markAttendance" element={<MarkAttendance  entityType="Student"/>} />
+                    <Route path="/viewAttendance" element={<ViewAttendance  entityType="Student"/>} />
+                    <Route path="/markStaffAttendance" element={<MarkAttendance  entityType="Staff"/>} />
+                    <Route path="/viewStaffAttendance" element={<ViewAttendance  entityType="Staff"/>} />
+                    <Route path="/studentDailyChecklist" element={<MarkDailyChecklist entityType="Student"/>} />
+                    <Route path="/staffDailyChecklist" element={<MarkDailyChecklist entityType="Staff"/>} />
                     <Route path="/graveReservations" element={<GraveReservations />} />
                     
                   </Routes>

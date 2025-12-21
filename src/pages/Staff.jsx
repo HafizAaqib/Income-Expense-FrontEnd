@@ -14,9 +14,12 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
+  CameraOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
+import { CONFIG } from "./clientConfig";
 
 const { Option } = Select;
 
@@ -36,6 +39,12 @@ const Staff = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
+
+  // Image management states
+  const [viewStaff, setViewStaff] = useState(null);
+  const [imagesModalVisible, setImagesModalVisible] = useState(false);
+  const [isDataUploading, setIsDataUploading] = useState(false);
+
   const [form] = Form.useForm();
 
   const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
@@ -45,7 +54,6 @@ const Staff = () => {
   const canAddData = savedUser?.canAddData;
   const canUpdateData = savedUser?.canUpdateData;
 
-  // Fetch Staff
   const getStaff = async () => {
     setLoading(true);
     try {
@@ -61,6 +69,11 @@ const Staff = () => {
       });
 
       setStaff(res.data.staff);
+      
+      if (viewStaff) {
+        const updated = res.data.staff.find(s => s._id === viewStaff._id);
+        if (updated) setViewStaff(updated);
+      }
     } catch (err) {
       messageApi.error("Failed to fetch staff.");
     }
@@ -71,7 +84,6 @@ const Staff = () => {
     getStaff();
   }, [filters]);
 
-  // Save Staff (Add / Edit)
   const handleSave = async () => {
     try {
       let values = await form.validateFields();
@@ -104,7 +116,6 @@ const Staff = () => {
     }
   };
 
-  // Delete Staff
   const handleDelete = async (id) => {
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
@@ -118,14 +129,70 @@ const Staff = () => {
     }
   };
 
-  // Table Columns
+  const UploadNewImageOnline = async (staffMember) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (event) => {
+      setIsDataUploading(true);
+      const file = event.target.files[0];
+      if (!file) {
+        setIsDataUploading(false);
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", CONFIG.UPLOAD_PRESET);
+
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUD_NAME}/image/upload`, {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.public_id) {
+          const publicIdWithExt = `${result.public_id}.${result.format}`;
+          const currentIds = staffMember.imagePublicIds || "";
+          const updatedIds = currentIds ? `${currentIds},${publicIdWithExt}` : publicIdWithExt;
+
+          const API = import.meta.env.VITE_API_BASE_URL;
+          await axios.put(`${API}/staff/${staffMember._id}`, { ...staffMember, imagePublicIds: updatedIds }, {
+            headers: { "X-Client": window.location.hostname.split(".")[0] },
+          });
+
+          messageApi.success('Document uploaded successfully');
+          getStaff();
+        }
+      } catch (error) {
+        messageApi.error('Upload failed');
+      } finally {
+        setIsDataUploading(false);
+      }
+    };
+    input.click();
+  };
+
+  const deleteImage = async (publicId) => {
+    try {
+      const API = import.meta.env.VITE_API_BASE_URL;
+      await axios.delete(`${API}/staff/image/${viewStaff._id}/${publicId}`, {
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
+      messageApi.success("Document deleted");
+      getStaff();
+    } catch {
+      messageApi.error("Delete failed");
+    }
+  };
+
   const columns = [
     { title: "Name", dataIndex: "name", align: "center" },
-    { title: "Father Name", dataIndex: "fatherName", align: "center", responsive: ["md"] },
-    { title: "Contact", dataIndex: "contact", align: "center", responsive: ["md"] },
     { title: "Designation", dataIndex: "designation", align: "center" },
-    { title: "Salary", dataIndex: "salary", align: "center", render: (s) => `${s} Rs` },
     { title: "Status", dataIndex: "status", align: "center" },
+    { title: "Salary", dataIndex: "salary", align: "center" },
     {
       title: "Joining Date",
       dataIndex: "joiningDate",
@@ -144,7 +211,16 @@ const Staff = () => {
       title: "Actions",
       align: "center",
       render: (record) => (
-        <>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
+          <Button
+            type="link" size="small"
+            icon={<CameraOutlined />}
+            style={{ color: '#c4941aff' }}
+            onClick={() => {
+              setViewStaff(record);
+              setImagesModalVisible(true);
+            }}
+          />
           {(isAdmin || canUpdateData) && (
             <>
               <Button
@@ -160,23 +236,13 @@ const Staff = () => {
                   });
                   setIsModalOpen(true);
                 }}
-              >
-                <span className="d-none d-md-inline">Edit</span>
-              </Button>
-
-              <Popconfirm
-                title="Are you sure to delete?"
-                onConfirm={() => handleDelete(record._id)}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Button icon={<DeleteOutlined />} size="small" type="link" danger>
-                  <span className="d-none d-md-inline">Delete</span>
-                </Button>
+              />
+              <Popconfirm title="Delete Staff?" onConfirm={() => handleDelete(record._id)}>
+                <Button icon={<DeleteOutlined />} size="small" type="link" danger />
               </Popconfirm>
             </>
           )}
-        </>
+        </div>
       ),
     },
   ];
@@ -197,9 +263,9 @@ const Staff = () => {
                 form.resetFields();
                 setIsModalOpen(true);
               }}
-              style={{
-                background: "linear-gradient(to bottom right, #029bd2, #20c997)",
-                borderColor: "#20c997",
+              style={{ 
+                background: "linear-gradient(to bottom right, #029bd2, #20c997)", 
+                borderColor: "#20c997", 
               }}
             >
               Add Staff
@@ -207,7 +273,6 @@ const Staff = () => {
           )}
         </div>
 
-        {/* Filters */}
         <div className="d-flex mb-3 gap-2">
           <Input
             placeholder="Search by Name"
@@ -226,20 +291,21 @@ const Staff = () => {
             {statusOptions.map((opt) => (
               <Option key={opt.value} value={opt.value}>
                 {opt.label}
-              </Option>
+                </Option>
             ))}
           </Select>
         </div>
 
         <Table
-          dataSource={staff}
-          columns={columns}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 7 }}
-        />
+         dataSource={staff} 
+         columns={columns} 
+         rowKey="_id" 
+         loading={loading} 
+         pagination={{ pageSize: 7 }} 
+         />
       </div>
 
+      {/* Edit/Add Modal */}
       <Modal
         title={editingStaff ? "Edit Staff" : "Add Staff"}
         open={isModalOpen}
@@ -289,6 +355,44 @@ const Staff = () => {
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Documents Modal */}
+      <Modal
+        title={`Documents: ${viewStaff?.name || ''}`}
+        open={imagesModalVisible}
+        onCancel={() => setImagesModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', minHeight: '100px' }}>
+          {viewStaff?.imagePublicIds ? (
+            viewStaff.imagePublicIds.split(',').map((publicId, index) => (
+              <div key={index} style={{ position: 'relative', border: '1px solid #f0f0f0', padding: '5px', borderRadius: '4px' }}>
+                <img
+                  src={`https://res.cloudinary.com/${CONFIG.CLOUD_NAME}/image/upload/w_200,h_200,c_fill/${publicId}`}
+                  alt="Staff Doc"
+                  style={{ width: '150px', height: '150px', objectFit: 'cover', cursor: 'pointer', borderRadius: '2px' }}
+                  onClick={() => window.open(`https://res.cloudinary.com/${CONFIG.CLOUD_NAME}/image/upload/${publicId}`, '_blank')}
+                />
+                {(isAdmin || canUpdateData) && (
+                  <Popconfirm title="Delete this document?" onConfirm={() => deleteImage(publicId)}>
+                    <Button type="primary" danger shape="circle" icon={<DeleteOutlined />} size="small" style={{ position: 'absolute', top: 10, right: 10 }} />
+                  </Popconfirm>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{ color: '#999', marginTop: '20px' }}>No documents uploaded.</div>
+          )}
+        </div>
+        {(isAdmin || canAddData || canUpdateData) && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px', borderTop: '1px solid #f0f0f0', paddingTop: '15px' }}>
+            <Button type="primary" icon={<UploadOutlined />} loading={isDataUploading} onClick={() => UploadNewImageOnline(viewStaff)}>
+              Upload New Document
+            </Button>
+          </div>
+        )}
       </Modal>
     </>
   );

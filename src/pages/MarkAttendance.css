@@ -26,3 +26,111 @@
     justify-content: center;
   }
 }
+
+
+/*  Container for Status + Remarks (Desktop Default) */
+.attendance-status-remarks-container {
+  display: flex; /* Radios and Remarks side-by-side on large screens */
+  gap: 15px;
+  align-items: flex-start;
+  flex-wrap: nowrap; /* Prevent wrapping on desktop */
+}
+
+.attendance-status-remarks-container .remarks-area {
+  flex-grow: 1; /* Remarks takes the remaining space */
+  min-width: 150px; /* Ensure remarks is usable on desktop */
+}
+
+/* Mobile View (Stack the fields) */
+@media (max-width: 768px) {
+  .attendance-status-remarks-container {
+    flex-direction: column; /* Stacks radios on top of remarks */
+    gap: 8px;
+  }
+
+  /* Ensure the Remarks textarea takes full width below the radios on mobile */
+  .attendance-status-remarks-container .remarks-area {
+    min-width: 100%; 
+  }
+  
+}
+
+
+
+
+/* MarkAttendance.css */
+
+/* ... (Keep existing styles for attendance-radio-group and responsive design) ... */
+
+
+/* --- Checklist Radio Group Styles --- */
+.checklist-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0; /* Important: Remove gap to make buttons adjacent */
+    justify-content: center;
+}
+
+.checklist-radio-group .ant-radio-button-wrapper {
+  border: 1px solid var(--color) !important;
+  color: var(--color) !important;
+  background: white !important;
+  text-align: center;
+  padding: 0 8px; 
+  height: 32px; 
+  line-height: 30px;
+  font-size: 14px;
+  min-width: 60px;
+}
+
+/* FIX 1: Ensure full color on selection (for buttonStyle="solid") */
+.checklist-radio-group .ant-radio-button-wrapper-checked {
+  background: var(--color) !important;
+  color: white !important;
+  border-color: var(--color) !important;
+  z-index: 1; /* Keep checked button on top */
+}
+
+/* Fix the annoying blue bar on left side */
+.checklist-radio-group .ant-radio-button-wrapper-checked::before {
+  background-color: var(--color) !important;
+}
+
+/* --- FIX 2: HIDE AND REMOVE SKIP BUTTON FROM LAYOUT FLOW --- */
+.checklist-radio-group .hidden-skip-button {
+    /* Completely removes it without affecting neighbor border radius */
+    display: none !important;
+}
+
+/* --- FIX 3: Force Border Radii --- */
+/* Target the first button (Yes) */
+.checklist-radio-group .ant-radio-button-wrapper:first-child {
+    /* border-top-left-radius: 6px !important;
+    border-bottom-left-radius: 6px !important; */
+    border-radius: 6px !important;
+}
+
+/* Target the second button (No), which is now the visual last element */
+.checklist-radio-group .ant-radio-button-wrapper:nth-child(2) {
+    /* Forcing the right border radius which Antd removes by default */
+    /* border-top-right-radius: 6px !important; 
+    border-bottom-right-radius: 6px !important; */
+    border-radius: 6px !important;
+
+    /* Ensure the border line is visible */
+    /* border-right-width: 1px !important; */
+    /* Antd default style for group items adjacent to the last item */
+    /* border-left: 0  !important; */
+}
+.checklist-radio-group .ant-radio-button-wrapper::before {
+    background-color: transparent !important;
+}
+
+
+/* Ensure the border between Yes and No is correctly styled */
+.checklist-radio-group .ant-radio-button-wrapper:first-child {
+    border-right-width: 0; /* Remove right border of Yes button to merge with No button */
+}
+.checklist-radio-group .ant-radio-button-wrapper:nth-child(2) {
+    border-left: 1px solid var(--color) !important; /* Re-add border to the left of No button */
+}

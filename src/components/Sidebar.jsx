@@ -25,6 +25,11 @@ import {
   SolutionOutlined,
   GatewayOutlined,
   FolderOutlined,
+  OrderedListOutlined,
+  UnorderedListOutlined,
+  FileDoneOutlined,
+  DotChartOutlined,
+  CarryOutOutlined,
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import './Sidebar.css';
@@ -42,8 +47,8 @@ const Sidebar = () => {
     students: false,
     staff: false,
     graveyard: false,
-    income: true,
-    expense: true,
+    income: false,
+    expense: false,
     support: false,
   });
   const navigate = useNavigate();
@@ -196,6 +201,17 @@ const Sidebar = () => {
               <NavLink to="/donors" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                 <UsergroupAddOutlined /> Regular Donors
               </NavLink>
+
+              {AllowedPages && AllowedPages.find(x => x == 'students') && (
+                <NavLink to="/student-checklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <OrderedListOutlined /> Student Checklist Items
+                </NavLink> 
+              )}
+              {AllowedPages && AllowedPages.find(x => x == 'staff') && (
+                <NavLink to="/staff-checklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <UnorderedListOutlined /> Staff Checklist Items
+                </NavLink> 
+              )}
             </div>
           )}
 
@@ -268,10 +284,13 @@ const Sidebar = () => {
                     <BookOutlined /> Monthly Fee
                   </NavLink>
                   <NavLink to="/markAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                    <BookOutlined /> Mark Attendance
+                    <CarryOutOutlined /> Mark Attendance
+                  </NavLink>
+                  <NavLink to="/studentDailyChecklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <FileDoneOutlined /> Daily Checklist
                   </NavLink>
                   <NavLink to="/viewAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                    <BookOutlined /> View Attendance
+                    <DotChartOutlined /> View Attendance
                   </NavLink>
                 </div>
               )}
@@ -298,6 +317,15 @@ const Sidebar = () => {
                   </NavLink>
                   <NavLink to="/staffSalary" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
                     <SolutionOutlined /> Staff Salaries
+                  </NavLink>
+                  <NavLink to="/markStaffAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <CarryOutOutlined /> Mark Attendance
+                  </NavLink>
+                  <NavLink to="/staffDailyChecklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <FileDoneOutlined /> Daily Checklist
+                  </NavLink>
+                  <NavLink to="/viewStaffAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                    <DotChartOutlined /> View Attendance
                   </NavLink>
                 </div>
               )}

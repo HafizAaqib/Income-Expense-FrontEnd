@@ -9,14 +9,19 @@ import {
   Form,
   Select,
   DatePicker,
+  Row,
+  Col
 } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
+  CameraOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
+import { CONFIG } from "./clientConfig"; // Ensure this is available
 
 const { Option } = Select;
 
@@ -37,6 +42,12 @@ const Students = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  
+  // Image states
+  const [viewStudent, setViewStudent] = useState(null);
+  const [imagesModalVisible, setImagesModalVisible] = useState(false);
+  const [isDataUploading, setIsDataUploading] = useState(false);
+
   const [form] = Form.useForm();
 
   const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
@@ -46,7 +57,6 @@ const Students = () => {
   const canAddData = savedUser?.canAddData;
   const canUpdateData = savedUser?.canUpdateData;
 
-  // Fetch Students
   const getStudents = async () => {
     setLoading(true);
     try {
@@ -62,6 +72,12 @@ const Students = () => {
       });
 
       setStudents(res.data.students);
+      
+      // Update the viewStudent reference if it's currently open to refresh images
+      if (viewStudent) {
+        const updated = res.data.students.find(s => s._id === viewStudent._id);
+        if (updated) setViewStudent(updated);
+      }
     } catch (err) {
       messageApi.error("Failed to fetch students.");
     }
@@ -72,7 +88,6 @@ const Students = () => {
     getStudents();
   }, [filters]);
 
-  // Save Student (Add / Edit)
   const handleSave = async () => {
     try {
       let values = await form.validateFields();
@@ -110,7 +125,6 @@ const Students = () => {
     }
   };
 
-  // Delete Student
   const handleDelete = async (id) => {
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
@@ -124,11 +138,71 @@ const Students = () => {
     }
   };
 
-  // Table Columns
+  // Cloudinary Upload Logic
+  const UploadNewImageOnline = async (student) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (event) => {
+      setIsDataUploading(true);
+      const file = event.target.files[0];
+      if (!file) {
+        setIsDataUploading(false);
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", CONFIG.UPLOAD_PRESET);
+
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUD_NAME}/image/upload`, {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.public_id) {
+          const publicIdWithExt = `${result.public_id}.${result.format}`;
+          const currentIds = student.imagePublicIds || "";
+          const updatedIds = currentIds ? `${currentIds},${publicIdWithExt}` : publicIdWithExt;
+
+          const API = import.meta.env.VITE_API_BASE_URL;
+          await axios.put(`${API}/students/${student._id}`, { ...student, imagePublicIds: updatedIds }, {
+            headers: { "X-Client": window.location.hostname.split(".")[0] },
+          });
+
+          messageApi.success('Document uploaded successfully');
+          getStudents();
+        }
+      } catch (error) {
+        messageApi.error('Upload failed');
+      } finally {
+        setIsDataUploading(false);
+      }
+    };
+    input.click();
+  };
+
+  // Delete Individual Image Logic
+  const deleteImage = async (publicId) => {
+    try {
+      const API = import.meta.env.VITE_API_BASE_URL;
+      await axios.delete(`${API}/students/image/${viewStudent._id}/${publicId}`, {
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
+      messageApi.success("Document deleted");
+      getStudents();
+    } catch {
+      messageApi.error("Delete failed");
+    }
+  };
+
   const columns = [
     { title: "Name", dataIndex: "name", align: "center" },
-    { title: "Father Name", dataIndex: "fatherName", align: "center" ,responsive: ['md'],},
-    { title: "Contact", dataIndex: "contact", align: "center" ,responsive: ['md'],},
+    { title: "Father Name", dataIndex: "fatherName", align: "center", responsive: ['md'] },
+    { title: "Contact", dataIndex: "contact", align: "center", responsive: ['md'] },
     { title: "Status", dataIndex: "status", align: "center" },
     { title: "Monthly Fee", dataIndex: "monthlyFee", align: "center" },
     {
@@ -149,7 +223,16 @@ const Students = () => {
       title: "Actions",
       align: "center",
       render: (record) => (
-        <>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
+          <Button
+            type="link" size="small"
+            icon={<CameraOutlined />}
+            style={{ color: '#c4941aff' }}
+            onClick={() => {
+              setViewStudent(record);
+              setImagesModalVisible(true);
+            }}
+          />
           {(isAdmin || canUpdateData) && (
             <>
               <Button
@@ -161,36 +244,27 @@ const Students = () => {
                   form.setFieldsValue({
                     ...record,
                     admissionDate: record.admissionDate
-                      ? dayjs(record.admissionDate)
+                     ? dayjs(record.admissionDate)
                       : null,
                     dateOfLeave: record.dateOfLeave
-                      ? dayjs(record.dateOfLeave)
+                     ? dayjs(record.dateOfLeave)
                       : null,
                   });
                   setIsModalOpen(true);
                 }}
-              >
-                <span className="d-none d-md-inline">Edit</span>
-              </Button>
-
+              />
               <Popconfirm
-                title="Are you sure to delete?"
-                onConfirm={() => handleDelete(record._id)}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Button
-                  icon={<DeleteOutlined />}
-                  size="small"
+               title="Delete Student?"
+               onConfirm={() => handleDelete(record._id)}
+               >
+                <Button icon={<DeleteOutlined />}
+                 size="small"
                   type="link"
-                  danger
-                >
-                  <span className="d-none d-md-inline">Delete</span>
-                </Button>
+                   danger />
               </Popconfirm>
             </>
           )}
-        </>
+        </div>
       ),
     },
   ];
@@ -200,7 +274,6 @@ const Students = () => {
       {msgContextHolder}
 
       <div className="container mt-4">
-        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4>Students</h4>
           {(isAdmin || canAddData) && (
@@ -215,14 +288,13 @@ const Students = () => {
               style={{
                 background: "linear-gradient(to bottom right, #029bd2, #20c997)",
                 borderColor: "#20c997",
-              }}
+               }}
             >
               Add Student
             </Button>
           )}
         </div>
 
-        {/* Filters */}
         <div className="d-flex mb-3 gap-2">
           <Input
             placeholder="Search by Name"
@@ -241,12 +313,11 @@ const Students = () => {
             {statusOptions.map((opt) => (
               <Option key={opt.value} value={opt.value}>
                 {opt.label}
-              </Option>
+                </Option>
             ))}
           </Select>
         </div>
 
-        {/* Table */}
         <Table
           dataSource={students}
           columns={columns}
@@ -256,7 +327,7 @@ const Students = () => {
         />
       </div>
 
-      {/* Modal */}
+      {/* Main Student Add/Edit Modal */}
       <Modal
         title={editingStudent ? "Edit Student" : "Add Student"}
         open={isModalOpen}
@@ -301,6 +372,60 @@ const Students = () => {
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* NEW: Document Viewer and Upload Modal */}
+      <Modal
+        title={`Documents: ${viewStudent?.name || ''}`}
+        open={imagesModalVisible}
+        onCancel={() => setImagesModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', minHeight: '100px' }}>
+          {viewStudent?.imagePublicIds ? (
+            viewStudent.imagePublicIds.split(',').map((publicId, index) => (
+              <div key={index} style={{ position: 'relative', border: '1px solid #f0f0f0', padding: '5px', borderRadius: '4px' }}>
+                <img
+                  src={`https://res.cloudinary.com/${CONFIG.CLOUD_NAME}/image/upload/w_200,h_200,c_fill/${publicId}`}
+                  alt="Student Doc"
+                  style={{ width: '150px', height: '150px', objectFit: 'cover', cursor: 'pointer', borderRadius: '2px' }}
+                  onClick={() => window.open(`https://res.cloudinary.com/${CONFIG.CLOUD_NAME}/image/upload/${publicId}`, '_blank')}
+                  onError={(e) => {
+                    e.target.src = `https://res.cloudinary.com/${CONFIG.CLOUD_NAME}/image/upload/${publicId}`;
+                  }}
+                />
+                {(isAdmin || canUpdateData) && (
+                  <Popconfirm title="Delete this document?" onConfirm={() => deleteImage(publicId)}>
+                    <Button
+                      type="primary"
+                      danger
+                      shape="circle"
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      style={{ position: 'absolute', top: 10, right: 10 }}
+                    />
+                  </Popconfirm>
+                )}
+              </div>
+            ))
+          ) : (
+            <div style={{ color: '#999', marginTop: '20px' }}>No documents uploaded.</div>
+          )}
+        </div>
+
+        {(isAdmin || canAddData || canUpdateData) && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px', borderTop: '1px solid #f0f0f0', paddingTop: '15px' }}>
+            <Button
+              type="primary"
+              icon={<UploadOutlined />}
+              loading={isDataUploading}
+              onClick={() => UploadNewImageOnline(viewStudent)}
+            >
+              Upload New Document
+            </Button>
+          </div>
+        )}
       </Modal>
     </>
   );
