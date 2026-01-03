@@ -282,7 +282,7 @@ const GraveReservations = () => {
                         <Input />
                     </Form.Item>
                     <Form.Item name="date" label="Date" rules={[{ required: true, message: "Date is required" }]}>
-                        <DatePicker style={{ width: "100%" }} />
+                        <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY" />
                     </Form.Item>
                     <Form.Item name="contact" label="Contact">
                         <Input />
@@ -322,7 +322,7 @@ const GraveReservations = () => {
                         </Select>
                     </Form.Item>
                     <Form.Item name="paymentDate" label="Payment Date" rules={[{ required: true, message: "Payment Date is required" }]}>
-                        <DatePicker style={{ width: "100%" }} />
+                        <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
                     </Form.Item>
                     <Form.Item name="paidBy" label="Paid By" rules={[{ required: true, message: "Paid By is required" }]}>
                         <Input />

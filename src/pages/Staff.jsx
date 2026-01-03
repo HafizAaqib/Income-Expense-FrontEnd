@@ -340,7 +340,7 @@ const Staff = () => {
             <Input type="number" />
           </Form.Item>
           <Form.Item name="joiningDate" label="Joining Date">
-            <DatePicker style={{ width: "100%" }} />
+            <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
           </Form.Item>
           <Form.Item name="status" label="Status" initialValue="active">
             <Select>
@@ -352,7 +352,7 @@ const Staff = () => {
             </Select>
           </Form.Item>
           <Form.Item name="dateOfLeave" label="Date of Leave">
-            <DatePicker style={{ width: "100%" }} />
+            <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
           </Form.Item>
         </Form>
       </Modal>

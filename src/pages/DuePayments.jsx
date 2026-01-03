@@ -377,7 +377,7 @@ const DuePayments = () => {
                         label="Due Date"
                         rules={[{ required: true, message: "Due Date is required" }]}
                     >
-                        <DatePicker style={{ width: "100%" }} format="DD MMM YYYY" />
+                        <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY" />
                     </Form.Item>
                     <Form.Item name="description" label="Description">
                         <Input.TextArea rows={3} />
@@ -408,7 +408,7 @@ const DuePayments = () => {
                     >
                         <DatePicker style={{
                             width: "100%" }}
-                            format="DD MMM YYYY" />
+                            format="DD - MMM - YYYY" />
                     </Form.Item>
 
 

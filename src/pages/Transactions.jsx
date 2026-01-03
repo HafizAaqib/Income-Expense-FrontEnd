@@ -1190,7 +1190,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                                         onChange={(value) =>
                                             setSelectedDateRange([value, selectedDateRange?.[1]])
                                         }
-                                        format="DD MMM YYYY"
+                                        format="DD - MMM - YYYY"
                                         style={{ width: "100%" }}
                                     />
                                 </Col>
@@ -1204,7 +1204,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                                         onChange={(value) =>
                                             setSelectedDateRange([selectedDateRange?.[0], value])
                                         }
-                                        format="DD MMM YYYY"
+                                        format="DD - MMM - YYYY"
                                         style={{ width: "100%" }}
                                     />
                                 </Col>
@@ -1429,7 +1429,7 @@ ${trxnType === 'asset' ? '' : `<div class="row"><span class="label">رقم&nbsp;
                         </Form.Item>}
 
                         <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-                            <DatePicker style={{ width: '100%' }} format='DD MMM YYYY' />
+                            <DatePicker style={{ width: '100%' }} format="DD - MMM - YYYY" />
                         </Form.Item>
 
                         <Form.Item name="description" label="Description" >

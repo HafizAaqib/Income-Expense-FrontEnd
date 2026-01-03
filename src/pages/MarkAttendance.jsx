@@ -200,10 +200,10 @@ const MarkAttendance = ({ entityType }) => { // entityType : has two total optio
                             <Space direction="vertical" style={{ width: '100%' }}>
                                 <label style={{ fontWeight: 'bold' }}>Select Date:</label>
                                 <DatePicker
-                                    style={{ width: "100%" }}
+                                    style={{ width: "100%"}}
                                     value={date}
                                     onChange={handleDateChange}
-                                    format="YYYY-MM-DD"
+                                    format="DD - MMM - YYYY"
                                     allowClear={false}
                                     disabledDate={(current) => current && current.valueOf() > dayjs().endOf('day').valueOf()} // Disable future dates
                                 />

@@ -305,7 +305,7 @@ const MarkDailyChecklist = ({ entityType }) => {
                                     style={{ width: "100%" }}
                                     value={date}
                                     onChange={handleDateChange}
-                                    format="YYYY-MM-DD"
+                                    format="DD - MMM - YYYY"
                                     allowClear={false}
                                     disabledDate={(current) => current && current.valueOf() > dayjs().endOf('day').valueOf()}
                                 />

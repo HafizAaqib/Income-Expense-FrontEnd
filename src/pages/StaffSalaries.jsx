@@ -306,7 +306,7 @@ const handlePay = async () => {
             label="Payment Date"
             rules={[{ required: true, message: "Payment Date is required" }]}
           >
-            <DatePicker style={{ width: "100%" }} />
+            <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
           </Form.Item>
 
           <Form.Item name="remarks" label="Remarks">

@@ -134,3 +134,10 @@ text-align: center; padding-left: 3px; padding-right: 3px;
   }
 }
 
+
+/* Targets every DatePicker container and its input text */
+.ant-picker, 
+.ant-picker input {
+  font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+    font-variant-numeric: tabular-nums; /* Makes numbers line up perfectly */
+}

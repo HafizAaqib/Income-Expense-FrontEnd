@@ -134,3 +134,4 @@
 .checklist-radio-group .ant-radio-button-wrapper:nth-child(2) {
     border-left: 1px solid var(--color) !important; /* Re-add border to the left of No button */
 }
+
