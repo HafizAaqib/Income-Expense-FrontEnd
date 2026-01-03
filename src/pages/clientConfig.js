@@ -1,17 +1,21 @@
-// const PagesToShow = ['income','expense','support','students','staff','graveyard'];
+//  PagesToShow = ['income','expense','support','students','staff','graveyard'];
+//  SOFTWARE_TYPE = ['Masjid', 'School', 'ECom'];
 
 const clientConfigs = {
   "faizanehajveri.web.app": {
+    SOFTWARE_TYPE: "Masjid",
     CLOUD_NAME: "drinjgbm5",
     UPLOAD_PRESET: "FaizaneHajveriImages",
     Header_FullName: "جامع مسجد فیضانِ ہجویری",
     Header_Address: `سکین کالج والی گلی P-565، بلال روڈ ، 
             لنک ویسٹ کینال روڈ، امین ٹاؤن، فیصل آباد`,
     Footer_Names: "مفتی نزاکت علی المدنی &nbsp;:&nbsp; 7812905-0306",
-    PrintNotes:"آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔",
-  PagesToShow:['income','expense','support','staff']
+    PrintNotes:
+      "آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔",
+    PagesToShow: ["income", "expense", "support", "students", "staff"],
   },
   "jamiarabbani.web.app": {
+    SOFTWARE_TYPE: "Masjid",
     CLOUD_NAME: "drinjgbm5",
     UPLOAD_PRESET: "FaizaneHajveriImages",
     Footer_Names: `
@@ -24,51 +28,98 @@ const clientConfigs = {
 
     Entities: [
       {
-        EntityId: 1, Name: ' جامع مسجد ربانی ',
-        Header_FullName: "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
+        EntityId: 1,
+        Name: " جامع مسجد ربانی ",
+        Header_FullName:
+          "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
         Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
         PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
-        PagesToShow:['income','expense','support','staff']
-        
+        PagesToShow: ["income", "expense", "support", "staff"],
       },
       {
-        EntityId: 2, Name: ' دارالعلوم بہارِ مدینہ گرلز',
-        Header_FullName: 'دارالعلوم بہارِ مدینہ گرلز',
+        EntityId: 2,
+        Name: " دارالعلوم بہارِ مدینہ گرلز",
+        Header_FullName: "دارالعلوم بہارِ مدینہ گرلز",
         Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
         PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مدرسے کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
-        PagesToShow:['income','expense','support','students','staff']
+        PagesToShow: ["income", "expense", "support", "students", "staff"],
       },
       {
-        EntityId: 3, Name: ' دارالعلوم بہارِ مدینہ بوائز',
-        Header_FullName: 'دارالعلوم بہارِ مدینہ بوائز',
+        EntityId: 3,
+        Name: " دارالعلوم بہارِ مدینہ بوائز",
+        Header_FullName: "دارالعلوم بہارِ مدینہ بوائز",
         Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
         PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مدرسے کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
-        PagesToShow:['income','expense','support','students','staff']
+        PagesToShow: ["income", "expense", "support", "students", "staff"],
       },
       {
-        EntityId: 4, Name: ' صوفی آباد نِشتر کالونی قبرستان',
-        Header_FullName: ' صوفی آباد نِشتر کالونی قبرستان',
+        EntityId: 4,
+        Name: " صوفی آباد نِشتر کالونی قبرستان",
+        Header_FullName: " صوفی آباد نِشتر کالونی قبرستان",
         Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
         PrintNotes: `آپ کی دی ہوئی رقم قبرستان کی ضروریات میں استعمال کی جائے گی۔`,
-        PagesToShow:['income','expense','support','staff','graveyard']
+        PagesToShow: ["income", "expense", "support", "staff", "graveyard"],
       },
       {
-        EntityId: 5, Name: ' میلاد فورس پاکستان',
-        Header_FullName: 'میلاد فورس پاکستان',
+        EntityId: 5,
+        Name: " میلاد فورس پاکستان",
+        Header_FullName: "میلاد فورس پاکستان",
         PrintNotes: `آپ کی دی ہوئی رقم میلاد شریف کے اخراجات کے لیے استعمال کی جائے گی۔`,
-        PagesToShow:['income','expense','support']
+        PagesToShow: ["income", "expense", "support"],
       },
-    ]
+    ],
   },
-  "localhost": {
+  localhost: {
+    SOFTWARE_TYPE: "Masjid",
     CLOUD_NAME: "drinjgbm5",
     UPLOAD_PRESET: "FaizaneHajveriImages",
-    Header_FullName: "جامع مسجد فیضانِ ہجویری",
-    Header_Address: `سکین کالج والی گلی P-565، بلال روڈ ، 
-            لنک ویسٹ کینال روڈ، امین ٹاؤن، فیصل آباد`,
-    Footer_Names: "مفتی نزاکت علی المدنی &nbsp;:&nbsp; 7812905-0306",
-    PrintNotes:"آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔",
-   PagesToShow : ['income','expense','support','students','staff']
+    Header_FullName: "Entity Name",
+    Header_Address: `Address here`,
+    Footer_Names: "Name here &nbsp;:&nbsp; 1234567-0306",
+    PrintNotes: "Note here, like Thank You",
+    PagesToShow: ["expense", "support","students", "staff"],
+  Entities: [
+      {
+        EntityId: 1,
+        Name: " جامع مسجد ربانی ",
+        Header_FullName:
+          "جامع مسجدربانی المعروف قاری غلام مصطفٰے (رحمۃ اللہ علیہ)",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
+        PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مسجد کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
+        PagesToShow: ["income", "expense", "support", "staff"],
+      },
+      {
+        EntityId: 2,
+        Name: " دارالعلوم بہارِ مدینہ گرلز",
+        Header_FullName: "دارالعلوم بہارِ مدینہ گرلز",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
+        PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مدرسے کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
+        PagesToShow: ["income", "expense", "support", "students", "staff"],
+      },
+      {
+        EntityId: 3,
+        Name: " دارالعلوم بہارِ مدینہ بوائز",
+        Header_FullName: "دارالعلوم بہارِ مدینہ بوائز",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
+        PrintNotes: `آپ کی عطیہ کردہ رقم کسی بھی جائز دینی، اصلاحی، تعمیری یا مدرسے کی تزئین و آرائش کے کام میں استعمال کی جا سکتی ہے۔`,
+        PagesToShow: ["income", "expense", "support", "students", "staff"],
+      },
+      {
+        EntityId: 4,
+        Name: " صوفی آباد نِشتر کالونی قبرستان",
+        Header_FullName: " صوفی آباد نِشتر کالونی قبرستان",
+        Header_Address: `ایڈریس : نواں پنڈ اٹاری صوفی آباد لاہور`,
+        PrintNotes: `آپ کی دی ہوئی رقم قبرستان کی ضروریات میں استعمال کی جائے گی۔`,
+        PagesToShow: ["income", "expense", "support", "staff", "graveyard"],
+      },
+      {
+        EntityId: 5,
+        Name: " میلاد فورس پاکستان",
+        Header_FullName: "میلاد فورس پاکستان",
+        PrintNotes: `آپ کی دی ہوئی رقم میلاد شریف کے اخراجات کے لیے استعمال کی جائے گی۔`,
+        PagesToShow: ["income", "expense", "support"],
+      },
+    ],
   },
 };
 
@@ -76,6 +127,4 @@ const clientConfigs = {
 const hostname = window.location.hostname;
 export const CONFIG = clientConfigs[hostname] || clientConfigs["localhost"];
 
-
 // firebase deploy --only hosting
-

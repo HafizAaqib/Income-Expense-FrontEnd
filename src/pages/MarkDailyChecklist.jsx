@@ -17,6 +17,7 @@ const taskStatusOptions = [
     // Frontend Value: 0 (Default/Not Marked/Skip) -> Not Saved to DB. Hidden from view.
     { value: 0, label: "Skip", color: '#6c757d' } 
 ];
+const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
 
 const MarkDailyChecklist = ({ entityType }) => {
     const [dailyRecords, setDailyRecords] = useState([]); 
@@ -27,8 +28,9 @@ const MarkDailyChecklist = ({ entityType }) => {
     const [messageApi, contextHolder] = message.useMessage();
 
     const API = import.meta.env.VITE_API_BASE_URL;
-    const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
-    const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+    const selectedEntity = useMemo(() => {
+        return JSON.parse(localStorage.getItem("selectedEntity") || "null");
+    }, []);
     const entityId = selectedEntity?.EntityId;
     
     const cleanApiBase = API.endsWith('/') ? API.slice(0, -1) : API;
@@ -356,7 +358,7 @@ const MarkDailyChecklist = ({ entityType }) => {
                     bordered
                     loading={dataLoading}
                     scroll={{ x: true }} 
-                    locale={{ emptyText: dataLoading ? 'Loading...' : 'No active students/staff or no active checklist items found.' }}
+                    locale={{ emptyText: dataLoading ? 'Loading...' : `No active ${entityType} or no active checklist items found.` }}
                 />
             </Card>
         </div>

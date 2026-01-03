@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   DashboardOutlined,
   UserOutlined,
@@ -11,7 +11,7 @@ import {
   BarChartOutlined,
   PlusSquareOutlined,
   MinusSquareOutlined,
-  DownOutlined ,
+  DownOutlined,
   CalendarOutlined,
   TeamOutlined,
   BookOutlined,
@@ -30,12 +30,16 @@ import {
   FileDoneOutlined,
   DotChartOutlined,
   CarryOutOutlined,
-} from '@ant-design/icons';
-import { useState, useEffect } from 'react';
-import './Sidebar.css';
-import { message, Modal, Button } from 'antd';
+} from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import "./Sidebar.css";
+import { message, Modal, Button } from "antd";
 import { CONFIG } from "../pages/clientConfig";
 import axios from "axios";
+import logoEcom from "../assets/LogoEcom.png";
+import logoMasjid from "../assets/LogoMasjid.png";
+import logoSchool from "../assets/LogoSchool.png";
+
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -53,7 +57,8 @@ const Sidebar = () => {
   });
   const navigate = useNavigate();
 
-  const hasEntities = Array.isArray(CONFIG.Entities) && CONFIG.Entities.length > 0;
+  const hasEntities =
+    Array.isArray(CONFIG.Entities) && CONFIG.Entities.length > 0;
 
   const [selectedEntity, setSelectedEntity] = useState(() => {
     if (!hasEntities) return null;
@@ -63,21 +68,25 @@ const Sidebar = () => {
 
   const [entityModalOpen, setEntityModalOpen] = useState(false);
 
-  const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const savedUser = JSON.parse(localStorage.getItem("user") || "null");
   const isAdmin = savedUser?.isAdmin;
   const canViewOtherUsersData = savedUser?.canViewOtherUsersData;
-  const AllowedPages = CONFIG.PagesToShow ??
-    (JSON.parse(localStorage.getItem("selectedEntity" || "null"))?.PagesToShow);
-
+  const AllowedPages =
+    CONFIG.PagesToShow ??
+    JSON.parse(localStorage.getItem("selectedEntity" || "null"))?.PagesToShow;
 
   useEffect(() => {
     const checkDue = async () => {
       try {
         const API = import.meta.env.VITE_API_BASE_URL;
-        const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity" || "null"));
+        const selectedEntity = JSON.parse(
+          localStorage.getItem("selectedEntity" || "null")
+        );
         let url = `${API}/due-payments/has-due`;
         if (selectedEntity) url += `?entity=${selectedEntity.EntityId}`;
-        const res = await axios.get(url, { headers: { "X-Client": window.location.hostname.split(".")[0] } });
+        const res = await axios.get(url, {
+          headers: { "X-Client": window.location.hostname.split(".")[0] },
+        });
         setHasDue(res.data.hasDue);
       } catch (err) {
         setHasDue(false);
@@ -87,9 +96,9 @@ const Sidebar = () => {
     checkDue();
   }, []);
   const logoutHandler = () => {
-    localStorage.removeItem('user');
-    message.success('Logout Successfully');
-    navigate('/login');
+    localStorage.removeItem("user");
+    message.success("Logout Successfully");
+    navigate("/login");
     autoCollapse();
   };
 
@@ -106,31 +115,87 @@ const Sidebar = () => {
     window.location.reload();
   };
 
-  const titleText = selectedEntity?.Name || "Masjid Management System";
+  const title_A =
+    CONFIG.SOFTWARE_TYPE === "Masjid"
+      ? "MASJID"
+      : CONFIG.SOFTWARE_TYPE === "School"
+      ? "SCHOOL"
+      : "E-COM";
+  const title_B = CONFIG.SOFTWARE_TYPE === "ECom" ? "MANAGEMENT" : "MANAGEMENT";
+
+  const titleText = selectedEntity?.Name || title_A + " " + title_B;
 
   const toggleSection = (key) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
     <>
       {/* Sidebar - main element with gradient and collapse classes */}
-      <div className={`sidebar-gradient ${collapsed ? 'collapsed' : 'open'}`}>
-
+      <div className={`sidebar-gradient ${collapsed ? "collapsed" : "open"}`}>
         {/* Sidebar Header/Branding Area - Removed old toggle button */}
         <div className="sidebar-header-gradient text-center fw-bold d-none d-md-flex justify-content-center align-items-center">
           {!collapsed ? (
-            <div
-              className="entity-title-desktop"
-              onClick={() => hasEntities && setEntityModalOpen(true)}
-            >
-              <div className="app-main-title-gradient text-white">Masjid Management System</div>
+            <div >
+              <div
+                className="app-main-title-gradient text-white flex items-center p-2"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "16px",
+                }}
+              >
+                <div>
+                  <img
+                    src={ 
+                      CONFIG.SOFTWARE_TYPE === "Masjid"
+                        ? logoMasjid
+                        : CONFIG.SOFTWARE_TYPE === "ECom"
+                        ? logoEcom
+                        : logoSchool
+                      }
+                    alt="Logo"
+                    style={{
+                      height: "85px",
+                      borderRadius: "15%",
+                      marginTop: "5px",
+                    }}
+                    className="object-contain rounded-full "
+                  />
+                </div>
+                <div style={{ paddingLeft: "0px", paddingRight: "25px" }}>
+                  <div
+                    className="ml-3 font-bold tracking-tight"
+                    style={{
+                      fontSize: "26px",
+                      color: "#dbeefaff",
+                      textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    {title_A}
+                  </div>
+
+                  <div
+                    className="ml-3 font-medium opacity-80"
+                    style={{
+                      fontSize: "13px",
+                      color: "#dbeefaff",
+                      marginTop: "-2px",
+                    }}
+                  >
+                    {title_B}
+                  </div>
+                </div>
+              </div>
+              {/* <div className="app-main-title-gradient text-white">
+                {title_A + ' '+ title_B}
+              </div>
               {hasEntities && (
                 <div className="entity-name-display-gradient">
                   {selectedEntity?.Name || "Select Entity"}
                   <DownSquareOutlined className="entity-dropdown-icon-gradient" />
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
             <FolderOutlined className="collapsed-app-icon-gradient" />
@@ -139,21 +204,37 @@ const Sidebar = () => {
 
         {/* Navigation Content */}
         <nav className="nav flex-column sidebar-nav-container-gradient">
-
+          <div style={{ display: "flex", justifyContent: "center" }} className="entity-title-desktop">
+            {hasEntities && (
+              <div
+                className="entity-name-display-gradient"
+                style={{ padding: "10px" }}
+                onClick={() => hasEntities && setEntityModalOpen(true)}
+              >
+                {selectedEntity?.Name || "Select Entity"}
+                <DownSquareOutlined className="entity-dropdown-icon-gradient" />
+              </div>
+            )}
+          </div>
           {/* Main Section */}
           {(isAdmin || canViewOtherUsersData) && (
             <>
               {/* Main Nav Link (Dashboard) */}
-              <NavLink to="/" className="nav-link-gradient nav-link-parent-main text-white" onClick={autoCollapse}>
+              <NavLink
+                to="/"
+                className="nav-link-gradient nav-link-parent-main text-white"
+                onClick={autoCollapse}
+              >
                 {/* Dashboard content wrapper for bell placement */}
                 <div className="dashboard-content-wrapper">
                   <div className="nav-link-content">
                     <BarChartOutlined /> {!collapsed && "Dashboard"}
                   </div>
                   {/* Bell/Notification Area for Desktop - RESTORED OLD DESIGN */}
-                  <div className='d-none d-md-flex' style={{ display: "Flex" }}>
-                    {hasDue &&
-                      <div className="tgleBtnDiv bellBtn bellBtn2"
+                  <div className="d-none d-md-flex" style={{ display: "Flex" }}>
+                    {hasDue && (
+                      <div
+                        className="tgleBtnDiv bellBtn bellBtn2"
                         style={{ backgroundColor: "#20c997" }}
                         onClick={(e) => {
                           e.preventDefault(); // stop NavLink navigation
@@ -161,10 +242,13 @@ const Sidebar = () => {
                         }}
                       >
                         <div className="tgleBtnIcon">
-                          <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
+                          <BellFilled
+                            style={{ color: "white", marginRight: "-0.1rem" }}
+                          />
                         </div>
-                      </div>}
-                    {hasDue && <div className='notifySign'></div>}
+                      </div>
+                    )}
+                    {hasDue && <div className="notifySign"></div>}
                   </div>
                 </div>
               </NavLink>
@@ -177,67 +261,127 @@ const Sidebar = () => {
             onClick={() => toggleSection("manage")}
           >
             <div className="title-content">
-                <FolderOutlined />
-                {!collapsed && "MANAGE"}
+              <FolderOutlined />
+              {!collapsed && "MANAGE"}
             </div>
-            {!collapsed && <DownOutlined style={{fontSize:'1em'}}  rotate={openSections.manage ? 180 : 0} />}
+            {!collapsed && (
+              <DownOutlined
+                style={{ fontSize: "1em" }}
+                rotate={openSections.manage ? 180 : 0}
+              />
+            )}
           </div>
           {openSections.manage && (
-            <div className='child-menu-container'>
+            <div className="child-menu-container">
               {isAdmin && (
-                <NavLink to="/users" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                <NavLink
+                  to="/users"
+                  className="nav-link-gradient nav-link-child text-white"
+                  onClick={autoCollapse}
+                >
                   <UserOutlined /> Users
                 </NavLink>
               )}
-              <NavLink to="/income-categories" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <FolderOpenOutlined /> Income Categories
-              </NavLink>
-              <NavLink to="/expense-categories" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+              {AllowedPages && AllowedPages.find((x) => x == "income") && (
+                <NavLink
+                  to="/income-categories"
+                  className="nav-link-gradient nav-link-child text-white"
+                  onClick={autoCollapse}
+                >
+                  <FolderOpenOutlined /> Income Categories
+                </NavLink>
+              )}
+              <NavLink
+                to="/expense-categories"
+                className="nav-link-gradient nav-link-child text-white"
+                onClick={autoCollapse}
+              >
                 <FolderOpenOutlined /> Expense Categories
               </NavLink>
-              <NavLink to="/asset-types" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <AppstoreAddOutlined /> Asset Types
-              </NavLink>
-              <NavLink to="/donors" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <UsergroupAddOutlined /> Regular Donors
-              </NavLink>
-
-              {AllowedPages && AllowedPages.find(x => x == 'students') && (
-                <NavLink to="/student-checklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                  <OrderedListOutlined /> Student Checklist Items
-                </NavLink> 
+              {AllowedPages && AllowedPages.find((x) => x == "income") && (
+                <>
+                  <NavLink
+                    to="/asset-types"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <AppstoreAddOutlined /> Asset Types
+                  </NavLink>
+                  <NavLink
+                    to="/donors"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <UsergroupAddOutlined /> Regular Donors
+                  </NavLink>
+                </>
               )}
-              {AllowedPages && AllowedPages.find(x => x == 'staff') && (
-                <NavLink to="/staff-checklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+
+              {AllowedPages && AllowedPages.find((x) => x == "students") && (
+                <NavLink
+                  to="/student-checklist"
+                  className="nav-link-gradient nav-link-child text-white"
+                  onClick={autoCollapse}
+                >
+                  <OrderedListOutlined /> Student Checklist Items
+                </NavLink>
+              )}
+              {AllowedPages && AllowedPages.find((x) => x == "staff") && (
+                <NavLink
+                  to="/staff-checklist"
+                  className="nav-link-gradient nav-link-child text-white"
+                  onClick={autoCollapse}
+                >
                   <UnorderedListOutlined /> Staff Checklist Items
-                </NavLink> 
+                </NavLink>
               )}
             </div>
           )}
 
           {/* Income Section - PARENT MENU */}
-          <div
-            className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
-            onClick={() => toggleSection("income")}
-          >
-            <div className="title-content">
-                <PlusSquareOutlined />
-                {!collapsed && "INCOME"}
-            </div>
-            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.income ? 180 : 0} />}
-          </div>
-          {openSections.income && (
-            <div className='child-menu-container'>
-              <NavLink to="/donorTracking" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <GiftOutlined /> Donor Tracking
-              </NavLink>
-              <NavLink to="/income" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <PlusSquareOutlined /> Income Records
-              </NavLink>
-              <NavLink to="/assets" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
-                <InsertRowBelowOutlined /> Asset Donations
-              </NavLink>
-            </div>
+          {AllowedPages && AllowedPages.find((x) => x == "income") && (
+            <>
+              <div
+                className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
+                onClick={() => toggleSection("income")}
+              >
+                <div className="title-content">
+                  <PlusSquareOutlined />
+                  {!collapsed && "INCOME"}
+                </div>
+                {!collapsed && (
+                  <DownOutlined
+                    style={{ fontSize: "1em" }}
+                    rotate={openSections.income ? 180 : 0}
+                  />
+                )}
+              </div>
+              {openSections.income && (
+                <div className="child-menu-container">
+                  <NavLink
+                    to="/donorTracking"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <GiftOutlined /> Donor Tracking
+                  </NavLink>
+                  <NavLink
+                    to="/income"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <PlusSquareOutlined /> Income Records
+                  </NavLink>
+                  <NavLink
+                    to="/assets"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <InsertRowBelowOutlined /> Asset Donations
+                  </NavLink>
+                </div>
+              )}
+            </>
           )}
 
           {/* Expenses Section - PARENT MENU */}
@@ -246,114 +390,186 @@ const Sidebar = () => {
             onClick={() => toggleSection("expense")}
           >
             <div className="title-content">
-                <MinusSquareOutlined />
-                {!collapsed && "EXPENSES"}
+              <MinusSquareOutlined />
+              {!collapsed && "EXPENSES"}
             </div>
-            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.expense ? 180 : 0} />}
+            {!collapsed && (
+              <DownOutlined
+                style={{ fontSize: "1em" }}
+                rotate={openSections.expense ? 180 : 0}
+              />
+            )}
           </div>
           {openSections.expense && (
-            <div className='child-menu-container'>
-              <NavLink to="/duePayments" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+            <div className="child-menu-container">
+              <NavLink
+                to="/duePayments"
+                className="nav-link-gradient nav-link-child text-white"
+                onClick={autoCollapse}
+              >
                 <CalendarOutlined /> Due Payments
               </NavLink>
-              <NavLink to="/expense" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+              <NavLink
+                to="/expense"
+                className="nav-link-gradient nav-link-child text-white"
+                onClick={autoCollapse}
+              >
                 <MinusSquareOutlined /> Expense Records
               </NavLink>
             </div>
           )}
 
           {/* Students Section - PARENT MENU */}
-          {AllowedPages && AllowedPages.find(x => x == 'students') &&
+          {AllowedPages && AllowedPages.find((x) => x == "students") && (
             <>
               <div
                 className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
                 onClick={() => toggleSection("students")}
               >
                 <div className="title-content">
-                    <TeamOutlined />
-                    {!collapsed && "STUDENTS"}
+                  <TeamOutlined />
+                  {!collapsed && "STUDENTS"}
                 </div>
-                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.students ? 180 : 0} />}
+                {!collapsed && (
+                  <DownOutlined
+                    style={{ fontSize: "1em" }}
+                    rotate={openSections.students ? 180 : 0}
+                  />
+                )}
               </div>
               {openSections.students && (
-                <div className='child-menu-container'>
-                  <NavLink to="/students" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                <div className="child-menu-container">
+                  <NavLink
+                    to="/students"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <TeamOutlined /> All Students
                   </NavLink>
-                  <NavLink to="/monthlyfee" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/monthlyfee"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <BookOutlined /> Monthly Fee
                   </NavLink>
-                  <NavLink to="/markAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/markAttendance"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <CarryOutOutlined /> Mark Attendance
                   </NavLink>
-                  <NavLink to="/studentDailyChecklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/studentDailyChecklist"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <FileDoneOutlined /> Daily Checklist
                   </NavLink>
-                  <NavLink to="/viewAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/viewAttendance"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <DotChartOutlined /> View Attendance
                   </NavLink>
                 </div>
               )}
             </>
-          }
+          )}
 
           {/* Staff Section - PARENT MENU */}
-          {AllowedPages && AllowedPages.find(x => x == 'staff') &&
+          {AllowedPages && AllowedPages.find((x) => x == "staff") && (
             <>
               <div
                 className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
                 onClick={() => toggleSection("staff")}
               >
                 <div className="title-content">
-                    <IdcardOutlined />
-                    {!collapsed && "STAFF"}
+                  <IdcardOutlined />
+                  {!collapsed && "STAFF"}
                 </div>
-                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.staff ? 180 : 0} />}
+                {!collapsed && (
+                  <DownOutlined
+                    style={{ fontSize: "1em" }}
+                    rotate={openSections.staff ? 180 : 0}
+                  />
+                )}
               </div>
               {openSections.staff && (
-                <div className='child-menu-container'>
-                  <NavLink to="/staff" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                <div className="child-menu-container">
+                  <NavLink
+                    to="/staff"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <IdcardOutlined /> All Staff
                   </NavLink>
-                  <NavLink to="/staffSalary" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/staffSalary"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <SolutionOutlined /> Staff Salaries
                   </NavLink>
-                  <NavLink to="/markStaffAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/markStaffAttendance"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <CarryOutOutlined /> Mark Attendance
                   </NavLink>
-                  <NavLink to="/staffDailyChecklist" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/staffDailyChecklist"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <FileDoneOutlined /> Daily Checklist
                   </NavLink>
-                  <NavLink to="/viewStaffAttendance" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                  <NavLink
+                    to="/viewStaffAttendance"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <DotChartOutlined /> View Attendance
                   </NavLink>
                 </div>
               )}
             </>
-          }
+          )}
 
           {/* Graveyard Section - PARENT MENU */}
-          {AllowedPages && AllowedPages.find(x => x == 'graveyard') &&
+          {AllowedPages && AllowedPages.find((x) => x == "graveyard") && (
             <>
               <div
                 className="parent-menu-title-gradient d-flex justify-content-between align-items-center"
                 onClick={() => toggleSection("graveyard")}
               >
                 <div className="title-content">
-                    <GatewayOutlined />
-                    {!collapsed && "GRAVEYARD"}
+                  <GatewayOutlined />
+                  {!collapsed && "GRAVEYARD"}
                 </div>
-                {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.graveyard ? 180 : 0} />}
+                {!collapsed && (
+                  <DownOutlined
+                    style={{ fontSize: "1em" }}
+                    rotate={openSections.graveyard ? 180 : 0}
+                  />
+                )}
               </div>
               {openSections.graveyard && (
-                <div className='child-menu-container'>
-                  <NavLink to="/graveReservations" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+                <div className="child-menu-container">
+                  <NavLink
+                    to="/graveReservations"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
                     <GatewayOutlined /> Grave Reservations
                   </NavLink>
                 </div>
               )}
             </>
-          }
+          )}
 
           {/* Support Section - PARENT MENU */}
           <div
@@ -361,37 +577,50 @@ const Sidebar = () => {
             onClick={() => toggleSection("support")}
           >
             <div className="title-content">
-                <MessageOutlined />
-                {!collapsed && "SUPPORT"}
+              <MessageOutlined />
+              {!collapsed && "SUPPORT"}
             </div>
-            {!collapsed && <DownOutlined style={{fontSize:'1em'}} rotate={openSections.support ? 180 : 0} />}
+            {!collapsed && (
+              <DownOutlined
+                style={{ fontSize: "1em" }}
+                rotate={openSections.support ? 180 : 0}
+              />
+            )}
           </div>
           {openSections.support && (
-            <div className='child-menu-container'>
-              <NavLink to="/contact" className="nav-link-gradient nav-link-child text-white" onClick={autoCollapse}>
+            <div className="child-menu-container">
+              <NavLink
+                to="/contact"
+                className="nav-link-gradient nav-link-child text-white"
+                onClick={autoCollapse}
+              >
                 <MessageOutlined /> Contact Developer
               </NavLink>
             </div>
           )}
 
           {/* Logout Button */}
-          <button className="nav-link-gradient logout-btn-gradient text-white bg-transparent border-0 text-start w-100" onClick={logoutHandler}>
+          <button
+            className="nav-link-gradient logout-btn-gradient text-white bg-transparent border-0 text-start w-100"
+            onClick={logoutHandler}
+          >
             <LogoutOutlined /> {!collapsed && "Logout"}
           </button>
         </nav>
       </div>
 
-      {/* DESKTOP COLLAPSE BUTTON - RESTORED OLD DESIGN/POSITIONING */}
-      <div className='d-none d-md-block'
+      {/* DESKTOP COLLAPSE BUTTON */}
+      <div
+        className="d-none d-md-block"
         style={{
           width: "0px",
-          marginLeft: collapsed ? "-1.1rem" : "-1.4rem", // Adjusted margin slightly for better positioning
+          marginLeft: collapsed ? "-1.1rem" : "-1.1rem",
           marginRight: "1.1rem",
           zIndex: 1000,
           marginTop: "2.5rem",
-          position: 'fixed', // Added fixed positioning to ensure it stays next to the sidebar
-          left: collapsed ? '55px' : '260px',
-          transition: 'all 0.3s ease-in-out',
+          position: "fixed", 
+          left: collapsed ? "55px" : "260px",
+          transition: "all 0.3s ease-in-out",
         }}
       >
         <button className="toggleBtn" onClick={() => setCollapsed(!collapsed)}>
@@ -404,22 +633,26 @@ const Sidebar = () => {
         </button>
       </div>
 
-
       {/* Mobile Nav - Uses the full gradient now */}
       <div className="mobile-nav-gradient d-md-none p-3 d-flex justify-content-between align-items-center">
-        {/* Bell/Notification Area for Mobile - RESTORED OLD DESIGN */}
+        {/* Bell/Notification Area for Mobile  */}
         <div style={{ display: "Flex" }}>
-          {hasDue && <div className="tgleBtnDiv bellBtn"
-            style={{ backgroundColor: "#20c997" }}
-            onClick={(e) => {
-              navigate("/?tab=Notifications");
-            }}
-          >
-            <div className="tgleBtnIcon">
-              <BellFilled style={{ color: "white", marginRight: "-0.1rem" }} />
+          {hasDue && (
+            <div
+              className="tgleBtnDiv bellBtn"
+              style={{ backgroundColor: "#20c997" }}
+              onClick={(e) => {
+                navigate("/?tab=Notifications");
+              }}
+            >
+              <div className="tgleBtnIcon">
+                <BellFilled
+                  style={{ color: "white", marginRight: "-0.1rem" }}
+                />
+              </div>
             </div>
-          </div>}
-          {hasDue && <div className='notifySign'></div>}
+          )}
+          {hasDue && <div className="notifySign"></div>}
         </div>
 
         {/* Title/Entity Selector for Mobile */}
@@ -428,7 +661,9 @@ const Sidebar = () => {
           onClick={() => hasEntities && setEntityModalOpen(true)}
         >
           {titleText}
-          {hasEntities && <DownSquareOutlined className="entity-dropdown-icon-gradient" />}
+          {hasEntities && (
+            <DownSquareOutlined className="entity-dropdown-icon-gradient" />
+          )}
         </div>
 
         {/* Menu Toggle Button for Mobile */}
@@ -439,7 +674,6 @@ const Sidebar = () => {
           <MenuOutlined />
         </button>
       </div>
-
 
       {/* Entity Selector Modal */}
       {hasEntities && (
@@ -453,7 +687,11 @@ const Sidebar = () => {
             {CONFIG.Entities.map((entity) => (
               <Button
                 key={entity.EntityId}
-                type={selectedEntity?.EntityId === entity.EntityId ? "primary" : "default"}
+                type={
+                  selectedEntity?.EntityId === entity.EntityId
+                    ? "primary"
+                    : "default"
+                }
                 block
                 className="mb-2 modal-entity-button-gradient"
                 onClick={() => handleEntitySelect(entity)}

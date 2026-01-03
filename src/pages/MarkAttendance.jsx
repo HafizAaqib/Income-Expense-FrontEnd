@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Table, DatePicker, Button, message, Card, Radio, Space, Row, Col, Input } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -17,6 +17,7 @@ const attendanceOptions = [
     { value: 0, label: "Not Marked", color: "#6c757d" }, // Grey - For initial state/not marked
 ];
 
+const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
 const MarkAttendance = ({ entityType }) => { // entityType : has two total options for now :- enum: ["Student", "Staff"] 
     const [dailyRecords, setDailyRecords] = useState([]); // Array of { _id, name, status, remarks, ... }
     const [date, setDate] = useState(dayjs());
@@ -25,9 +26,11 @@ const MarkAttendance = ({ entityType }) => { // entityType : has two total optio
     const [messageApi, contextHolder] = message.useMessage();
 
     const API = import.meta.env.VITE_API_BASE_URL;
-    const clientHeader = { "X-Client": window.location.hostname.split(".")[0] };
 
-    const selectedEntity = JSON.parse(localStorage.getItem("selectedEntity") || "null");
+    const selectedEntity = useMemo(() => {
+        return JSON.parse(localStorage.getItem("selectedEntity") || "null");
+    }, []);
+
     const entityId = selectedEntity?.EntityId;
     
     // --- Data Fetching (Combines fetching student/staff list and daily attendance data) ---
@@ -42,13 +45,13 @@ const MarkAttendance = ({ entityType }) => { // entityType : has two total optio
                 },
                 headers: clientHeader,
             });
-            
+        
             // The backend is responsible for merging student/staff list and attendance data
             const fetchedRecords = res.data.records.map(record => ({
                 ...record,
                 status: record.status === undefined ? 0 : record.status, 
             }));
-            
+
             setDailyRecords(fetchedRecords);
             
         } catch (error) {

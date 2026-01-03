@@ -308,7 +308,7 @@
 .mobile-entity-title-gradient {
     color: white;
     font-size: 1.1rem;
-    font-family: 'NotoNastaliqUrdu', sans-serif;
+    /* font-family: 'NotoNastaliqUrdu', sans-serif; */
     cursor: pointer;
     text-align: center;
 }
