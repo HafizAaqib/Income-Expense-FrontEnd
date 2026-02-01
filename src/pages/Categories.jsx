@@ -14,11 +14,20 @@ const Categories = ({ type }) => {
 
   const selectedEntity = JSON.parse(localStorage.getItem('selectedEntity') || 'null');
 
-  const statusOptions = [
-    { label: 'Active', value: 1, color: 'green' },
-    { label: 'Closed (Keep Records)', value: 2, color: 'orange' },
-    { label: 'Closed (Hide Records)', value: 3, color: 'red' },
-  ];
+  const TWO_STATUS_OPTIONS = [
+  { label: 'Active', value: 1, color: 'green' },
+  { label: 'Inactive', value: 2, color: 'red' },
+];
+
+const DEFAULT_STATUS_OPTIONS = [
+  { label: 'Active', value: 1, color: 'green' },
+  { label: 'Closed (Keep Records)', value: 2, color: 'orange' },
+  { label: 'Closed (Hide Records)', value: 3, color: 'red' },
+];
+
+const statusOptions =
+  (type === 'staff' || type === 'student') ? TWO_STATUS_OPTIONS : DEFAULT_STATUS_OPTIONS;
+
 
   const getCategories = async () => {
     setLoading(true);
@@ -60,7 +69,7 @@ const Categories = ({ type }) => {
       });
       setNewCategory('');
       getCategories();
-      messageApi.success(`${type === 'asset' ? 'Asset Type' : 'Category'} added`);
+      messageApi.success(`${type === 'asset' ? 'Asset Type' : (type === 'staff' ? 'Staff Designation' : (type === 'student' ? 'Class' : 'Category'))} added`);
     } catch {
       messageApi.error('Failed to add');
     }
@@ -73,7 +82,7 @@ const Categories = ({ type }) => {
         headers: { "X-Client": window.location.hostname.split(".")[0] },
       });
       setEditingId(null);
-      messageApi.success(`${type === 'asset' ? 'Asset Type' : 'Category'} updated`);
+      messageApi.success(`${type === 'asset' ? 'Asset Type' : (type === 'staff' ? 'Staff Designation' : (type === 'student' ? 'Class' : 'Category'))} updated`);
       getCategories();
     } catch {
       messageApi.error('Update failed');
@@ -95,7 +104,7 @@ const Categories = ({ type }) => {
 
   const columns = [
     {
-      title: `${type === 'asset' ? 'Asset Type' : 'Category Name'} `,
+      title: `${type === 'asset' ? 'Asset Type' : (type === 'staff' ? 'Designation' : (type === 'student' ? 'Class Name' : 'Category Name'))} `,
       dataIndex: 'name',
       align: 'center',
       render: (text, record) =>
@@ -200,6 +209,10 @@ const Categories = ({ type }) => {
               ? 'Income Categories'
               : type === 'expense'
               ? 'Expense Categories'
+              : type === 'staff'
+              ? 'Staff Designations'
+              : type === 'student'
+              ? 'Classes'
               : 'Asset Types'}
           </h4>
         </div>
@@ -207,7 +220,7 @@ const Categories = ({ type }) => {
         {(isAdmin || canAddData) && (
           <div className="d-flex mb-3 gap-2">
             <Input
-              placeholder={type === 'asset' ? 'New Asset Type' : 'New Category Name'}
+              placeholder={type === 'asset' ? 'New Asset Type' : (type === 'staff' ? 'New Designation' : (type === 'student' ? 'New Class Name' : 'New Category Name'))}
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               onPressEnter={handleAdd}

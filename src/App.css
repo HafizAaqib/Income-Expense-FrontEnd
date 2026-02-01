@@ -141,3 +141,19 @@ text-align: center; padding-left: 3px; padding-right: 3px;
   font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
     font-variant-numeric: tabular-nums; /* Makes numbers line up perfectly */
 }
+
+
+/* Ensure all components have the exact same height */
+.custom-tasks-height {
+  min-height: 43px !important;
+  display: flex;
+  align-items: center;
+}
+
+/* Ant Design Select needs specific targeting for its internal selector */
+.custom-tasks-height.ant-select .ant-select-selector {
+  min-height: 43px !important;
+  display: flex;
+  align-items: center;
+  overflow-y: auto; /* Handles many tags without breaking layout */
+}

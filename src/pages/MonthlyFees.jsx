@@ -229,7 +229,6 @@ const MonthlyFees = () => {
       title: "Description",
       dataIndex: "description",
       align: "center",
-      //responsive: ["lg"],
       render: (txt, record) => txt || record?.transaction?.description || "",
       responsive: ['md'],
     },

@@ -1,14 +1,14 @@
-// MarkDailyChecklist.jsx
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Table, DatePicker, Button, message, Card, Input, Space, Row, Col, Radio } from "antd"; 
+import { Table, DatePicker, Button, message, Card, Input, Space, Row, Col, Radio, Select } from "antd"; 
 import axios from "axios";
 import dayjs from "dayjs";
 import { SaveOutlined, ReloadOutlined } from "@ant-design/icons";
 import "./MarkAttendance.css"; 
 
 const { TextArea } = Input;
+const { Option } = Select;
 
-// Define the three states for the frontend
+// Three states for the frontend
 const taskStatusOptions = [
     // Frontend Value: 2 (Yes/Done) -> Saved to DB as 1
     { value: 2, label: "Yes", color: '#28a745' }, // Green
@@ -23,6 +23,8 @@ const MarkDailyChecklist = ({ entityType }) => {
     const [dailyRecords, setDailyRecords] = useState([]); 
     const [tasksList, setTasksList] = useState([]); 
     const [date, setDate] = useState(dayjs());
+    const [category, setCategory] = useState(null); // 'Class' for Students, 'Designation' for Staff
+    const [categoryOptions, setCategoryOptions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
@@ -40,14 +42,41 @@ const MarkDailyChecklist = ({ entityType }) => {
         ? 'Student Daily Checklist' 
         : 'Staff Daily Checklist';
 
+    const categoryLabel = entityType === 'Student' ? 'Class' : 'Designation';
+
+    useEffect(() => {
+         const fetchCategories = async () => {
+            try {
+                const API = import.meta.env.VITE_API_BASE_URL;
+                let url = `${API}/categories?type=${entityType==='Student' ? 'student' : 'staff'}`;
+                if (selectedEntity) {
+                    url += `&entity=${selectedEntity.EntityId}`;
+                }
+                const res = await axios.get(url, {
+                    headers: {
+                    "X-Client": window.location.hostname.split(".")[0],
+                    },
+                });
+                setCategoryOptions(res.data.categories);
+                } catch (err) {
+                messageApi.error(`Failed to fetch ${entityType==='Student' ? 'classes' : 'designations'}.`);
+            }
+        };
+        fetchCategories();
+        setCategory(null); // Reset selection when entityType switches
+        setDailyRecords([]);
+    }, [entityType, cleanApiBase]);
+
 
     // --- Data Fetching ---
     
-    const fetchTasksList = useCallback(async () => {
-        // ... (implementation remains the same) ...
+    const fetchTasksList = useCallback(async (selectedCat) => {
         try {
             const res = await axios.get(`${ATTENDANCE_BASE_URL}/tasks-list`, {
-                params: { entityType: entityType },
+                params: { 
+                    entityType: entityType,
+                    category: selectedCat // Filter tasks by the specific class/designation
+                },
                 headers: clientHeader,
             });
             const fetchedTasks = res.data.tasks.map(t => ({
@@ -61,17 +90,19 @@ const MarkDailyChecklist = ({ entityType }) => {
             messageApi.error(error.response?.data?.message || "Failed to fetch checklist items.");
             return [];
         }
-    }, [ATTENDANCE_BASE_URL, clientHeader, messageApi, entityType]);
+    }, [ATTENDANCE_BASE_URL,clientHeader, entityType, messageApi]);
 
 
-    const fetchDailyRecords = useCallback(async (selectedDate, currentTasksList) => {
+    const fetchDailyRecords = useCallback(async (selectedDate, currentTasksList, selectedCat) => {
+        if (!selectedCat) return;
         setDataLoading(true);
         try {
             const res = await axios.get(`${ATTENDANCE_BASE_URL}/daily-records`, {
                 params: { 
                     date: selectedDate.format("YYYY-MM-DD"),
                     entityType: entityType,
-                    entity: entityId
+                    entity: entityId,
+                    category: selectedCat 
                 },
                 headers: clientHeader,
             });
@@ -82,7 +113,7 @@ const MarkDailyChecklist = ({ entityType }) => {
 
                 const tasks = currentTasksList.map(task => {
                     const existing = existingTasksMap.get(task.taskId.toString());
-                    
+
                     let frontendStatus = 0; // Default to 0 (Not Marked/Skip)
                     if (existing) {
                         if (existing.status === 1) frontendStatus = 2; // DB 1 (Yes) -> Frontend 2
@@ -90,9 +121,9 @@ const MarkDailyChecklist = ({ entityType }) => {
                     }
 
                     return {
-                        taskId: task.taskId,
-                        status: frontendStatus, 
-                    };
+                         taskId: task.taskId, 
+                         status: frontendStatus, 
+                        };
                 });
 
                 return {
@@ -103,7 +134,7 @@ const MarkDailyChecklist = ({ entityType }) => {
             });
             
             setDailyRecords(fetchedRecords);
-            
+
         } catch (error) {
             messageApi.error(error.response?.data?.message || "Failed to fetch daily records.");
             setDailyRecords([]);
@@ -112,45 +143,50 @@ const MarkDailyChecklist = ({ entityType }) => {
         }
     }, [ATTENDANCE_BASE_URL, clientHeader, messageApi, entityId, entityType]);
 
-    // --- FIX: Ensure data loads on initial mount and date change ---
+
     useEffect(() => {
-        // This logic ensures data is loaded when the component mounts or when the date changes
         const loadData = async () => {
-            if (entityId !== undefined || selectedEntity === null) {
-                const tasks = await fetchTasksList();
+            if (category && (entityId !== undefined || selectedEntity === null)) {
+                const tasks = await fetchTasksList(category);
                 if (tasks.length > 0) {
-                    await fetchDailyRecords(date, tasks);
+                    await fetchDailyRecords(date, tasks, category);
                 } else {
                     setDailyRecords([]);
                 }
             }
-        }
+        };
         loadData();
-    }, [date,  entityId, selectedEntity, entityType]);
+    }, [date, category, entityId, selectedEntity, entityType]);
     
-    // --- Handlers (omitted for brevity, remain the same) ---
+
+    // --- Handlers ---
     const handleDateChange = (newDate) => {
         if (newDate) {
             setDate(newDate);
         }
     };
 
-    const handleTaskStatusChange = (personId, taskId, newStatus) => {
+    const handleCategoryChange = (val) => {
+        setCategory(val);
+        setDailyRecords([]); // Clear table while loading new category
+    };
+
+    const handleTaskStatusChange = useCallback((personId, taskId, newStatus) => {
         setDailyRecords(prevRecords => 
             prevRecords.map(record => 
                 record._id === personId 
                     ? { 
                         ...record, 
                         tasks: record.tasks.map(task => 
-                            task.taskId === taskId 
-                                ? { ...task, status: newStatus } 
-                                : task
+                            task.taskId === taskId
+                             ? { ...task, status: newStatus } 
+                             : task
                         )
                       } 
                     : record
             )
         );
-    };
+    }, []);
 
     const handleRemarksChange = (personId, e) => {
         setDailyRecords(prevRecords => 
@@ -161,8 +197,9 @@ const MarkDailyChecklist = ({ entityType }) => {
             )
         );
     };
-    
+
     const handleSave = async () => {
+        if (!category) return messageApi.warning(`Please select a ${categoryLabel}`);
         setLoading(true);
         try {
             const taskPayload = dailyRecords.map(record => {
@@ -187,7 +224,7 @@ const MarkDailyChecklist = ({ entityType }) => {
             }, { headers: clientHeader });
 
             messageApi.success(`${entityType} daily checklist saved successfully!`);
-
+        
         } catch (error) {
             messageApi.error(error.response?.data?.message || "Failed to save daily checklist.");
         } finally {
@@ -195,9 +232,8 @@ const MarkDailyChecklist = ({ entityType }) => {
         }
     };
 
-    // --- Table Columns (Updated Radio.Group) ---
+    // --- Table Columns ---
     const columns = useMemo(() => {
-        // ... (Base columns remain the same) ...
         const baseColumns = [
             {
                 title: "#",
@@ -215,7 +251,6 @@ const MarkDailyChecklist = ({ entityType }) => {
             },
         ];
 
-        // Dynamic Columns based on fetched tasks
         const taskColumns = tasksList.map(task => ({
             title: task.name,
             key: `task-${task.taskId}`,
@@ -223,47 +258,26 @@ const MarkDailyChecklist = ({ entityType }) => {
             className: 'text-center',
             render: (text, record) => {
                 const taskStatus = record.tasks.find(t => t.taskId === task.taskId)?.status || 0;
-                
-                const yesOption = taskStatusOptions.find(opt => opt.value === 2);
-                const noOption = taskStatusOptions.find(opt => opt.value === 1);
-                const skipOption = taskStatusOptions.find(opt => opt.value === 0);
-
                 return (
                     <div className="task-status-cell">
-                        <Radio.Group
-                            size="small"
-                            value={taskStatus}
-                            onChange={(e) => 
-                                handleTaskStatusChange(record._id, task.taskId, e.target.value)
-                            }
-                            // FIX 1: Add buttonStyle="solid" for full color on selection
-                            buttonStyle="solid" 
-                            className="checklist-radio-group" 
-                        >
-                            {/* Yes/Done Button (Value 2, Maps to DB 1) */}
+                     <Radio.Group
+                        size="small"
+                        value={taskStatus}
+                        onChange={(e) => handleTaskStatusChange(record._id, task.taskId, e.target.value)}
+                        buttonStyle="solid"
+                        className="checklist-radio-group" 
+                    >
+                        {taskStatusOptions.map(opt => (
                             <Radio.Button 
-                                value={yesOption.value} 
-                                style={{ '--color': yesOption.color }} 
+                                key={opt.value}
+                                value={opt.value} 
+                                style={opt.value !== 0 ? { '--color': opt.color } : {}}
+                                className={opt.value === 0 ? "hidden-skip-button" : ""}
                             >
-                                {yesOption.label}
+                                {opt.label}
                             </Radio.Button>
-                            
-                            {/* No/Not Done Button (Value 1, Maps to DB 0) */}
-                            <Radio.Button 
-                                value={noOption.value} 
-                                style={{ '--color': noOption.color , margin: '1px' }}
-                            >
-                                {noOption.label}
-                            </Radio.Button>
-
-                            {/* Skip/Not Marked Button (Value 0). Hidden but functional for reset. */}
-                             <Radio.Button 
-                                value={skipOption.value} 
-                                className="hidden-skip-button"
-                            >
-                                {skipOption.label} 
-                            </Radio.Button>
-                        </Radio.Group>
+                        ))}
+                    </Radio.Group>
                     </div>
                 );
             },
@@ -293,55 +307,72 @@ const MarkDailyChecklist = ({ entityType }) => {
             {contextHolder}
             <Card title={pageTitle} bordered={false}>
                 
-                {/* Header/Controls Section (omitted for brevity) */}
                 <div style={{ marginBottom: 20 }}>
-                    <Row gutter={[16, 16]} align="middle">
-                        
+                    <Row gutter={[16, 16]} align="bottom">
                         {/* Date Picker */}
-                        <Col xs={24} md={6}>
+                        <Col xs={24} sm={12} md={6}>
                             <Space direction="vertical" style={{ width: '100%' }}>
-                                <label style={{ fontWeight: 'bold' }}>Select Date:</label>
+                                <span style={{ fontWeight: 'bold' }}>Select Date:</span>
                                 <DatePicker
                                     style={{ width: "100%" }}
                                     value={date}
                                     onChange={handleDateChange}
                                     format="DD - MMM - YYYY"
                                     allowClear={false}
-                                    disabledDate={(current) => current && current.valueOf() > dayjs().endOf('day').valueOf()}
+                                    disabledDate={(current) => current && current > dayjs().endOf('day')}
                                 />
                             </Space>
                         </Col>
 
+                        {/* Category Selector (Class/Designation) */}
+                        <Col xs={24} sm={12} md={6}>
+                            <Space direction="vertical" style={{ width: '100%' }}>
+                                <span style={{ fontWeight: 'bold' }}>Select {categoryLabel}:</span>
+                                <Select
+                                    placeholder={`Select ${categoryLabel}`}
+                                    style={{ width: '100%' }}
+                                    value={category}
+                                    onChange={handleCategoryChange}
+                                    showSearch
+                                >
+                                    {categoryOptions.map((item, idx) => {
+                                        const name = typeof item === 'string' ? item : item.name;
+                                        const id = typeof item === 'string' ? item : item._id;
+                                        return <Option key={idx} value={id}>{name}</Option>;
+                                    })}
+                                </Select>
+                            </Space>
+                        </Col>
+
                         {/* Reload Button */}
-                        <Col xs={24} md={12} className="text-center">
+                        <Col xs={12} md={6}>
                             <Button
                                 icon={<ReloadOutlined />}
-                                onClick={() => {
-                                    const reloadData = async () => {
-                                        const tasks = await fetchTasksList();
-                                        if (tasks.length > 0) {
-                                            await fetchDailyRecords(date, tasks);
-                                        }
-                                    }
-                                    reloadData();
+                                onClick={async () => {
+                                    if(!category) return messageApi.info(`Select a ${categoryLabel} first`);
+                                    const tasks = await fetchTasksList(category);
+                                    if (tasks.length > 0) await fetchDailyRecords(date, tasks, category);
                                 }}
                                 loading={dataLoading}
+                                block
                             >
-                                Reload Data
+                                Reload
                             </Button>
                         </Col>
 
                         {/* Save button */}
-                        <Col xs={24} md={6} className="text-md-end text-center">
+                        <Col xs={12} md={6}>
                             <Button
                                 type="primary"
                                 icon={<SaveOutlined />}
                                 onClick={handleSave}
                                 loading={loading}
+                                disabled={!category || dailyRecords.length === 0}
                                 style={{
                                     background: "linear-gradient(to bottom right, #029bd2, #20c997)",
                                     borderColor: "#20c997",
                                 }}
+                                block
                             >
                                 Save Checklist
                             </Button>
@@ -357,8 +388,12 @@ const MarkDailyChecklist = ({ entityType }) => {
                     pagination={{ pageSize: 100 }}
                     bordered
                     loading={dataLoading}
-                    scroll={{ x: true }} 
-                    locale={{ emptyText: dataLoading ? 'Loading...' : `No active ${entityType} or no active checklist items found.` }}
+                    scroll={{ x: 'max-content' }} 
+                    locale={{ 
+                        emptyText: !category 
+                            ? `Please select a ${categoryLabel} to view the checklist.` 
+                            : `No active ${entityType} or no active checklist items found for this ${categoryLabel}.` 
+                    }}
                 />
             </Card>
         </div>

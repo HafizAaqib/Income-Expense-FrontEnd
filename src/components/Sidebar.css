@@ -339,6 +339,18 @@
 }
 
 
+.logo-animation {
+    object-fit: contain; 
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.logo-animation:hover {
+    /* Scale the image to 1.1 (10% bigger) */
+    transform: scale(1.1);
+}
+
+
 /* --- Media Queries --- */
 
 @media (min-width: 768px) {

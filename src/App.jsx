@@ -22,6 +22,7 @@ import ViewAttendance from './pages/ViewAttendance'
 import GraveReservations from './pages/GraveReservations'
 import Tasks from './pages/Tasks'
 import MarkDailyChecklist from './pages/MarkDailyChecklist'
+import ProductCategories from './pages/ProductCategories'
 
 function App() {
   let savedUser = null;
@@ -55,7 +56,12 @@ function App() {
             <ProtectedRoutes>
               <div className="d-flex flex-column flex-md-row" style={{ height: '100vh' }}>
                 <Sidebar />
-                <div className="flex-grow-1 p-3" style={{ overflowY: 'auto' }}>
+                <div className="flex-grow-1 p-3" style={{ overflowY: 'auto' ,
+                  border: '2px solid', 
+                  borderImageSource: 'linear-gradient(to bottom left, #029bd2, #20c997)',
+                  borderImageSlice: 1 ,
+                  background : 'linear-gradient(to bottom left, #a4e0f81a, #aef8e21f)'
+                 }}>
                   <Routes>
                     {/* <Route path="/" element={<Dashboard />} /> */}
                     <Route
@@ -71,9 +77,12 @@ function App() {
                     <Route path="/users" element={<ProtectedAdminRoute><Users /></ProtectedAdminRoute>} />
                     <Route path="/income-categories" element={<Categories type="income" />} />
                     <Route path="/expense-categories" element={<Categories type="expense" />} />
+                    <Route path="/product-categories" element={<ProductCategories />} />
                     <Route path="/asset-types" element={<Categories type="asset" />} />
+                    <Route path="/student-classes" element={<Categories type="student" />} />
                     <Route path="/student-checklist" element={<Tasks type="student" />} />
                     <Route path="/staff-checklist" element={<Tasks type="staff" />} />
+                    <Route path="/staff-designations" element={<Categories type="staff" />} />
                     <Route path="/income" element={<Transactions type="income" />} />
                     <Route path="/expense" element={<Transactions type="expense" />} />
                     <Route path="/assets" element={<Transactions type="asset" />} />

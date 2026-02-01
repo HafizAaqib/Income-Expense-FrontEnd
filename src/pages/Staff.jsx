@@ -32,6 +32,7 @@ const statusOptions = [
 
 const Staff = () => {
   const [staff, setStaff] = useState([]);
+  const [categories, setCategories] = useState([]); // NEW: For designations
   const [loading, setLoading] = useState(false);
   const [messageApi, msgContextHolder] = message.useMessage();
 
@@ -53,6 +54,21 @@ const Staff = () => {
   const isAdmin = savedUser?.isAdmin;
   const canAddData = savedUser?.canAddData;
   const canUpdateData = savedUser?.canUpdateData;
+
+  const getCategories = async () => {
+    try {
+      const API = import.meta.env.VITE_API_BASE_URL;
+      let url = `${API}/categories?type=staff`;
+      if (selectedEntity) url += `&entity=${selectedEntity.EntityId}`;
+
+      const res = await axios.get(url, {
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
+      setCategories(res.data.categories || []);
+    } catch (err) {
+      console.error("Failed to fetch categories");
+    }
+  };
 
   const getStaff = async () => {
     setLoading(true);
@@ -82,6 +98,7 @@ const Staff = () => {
 
   useEffect(() => {
     getStaff();
+    getCategories();
   }, [filters]);
 
   const handleSave = async () => {
@@ -189,8 +206,27 @@ const Staff = () => {
   };
 
   const columns = [
-    { title: "Name", dataIndex: "name", align: "center" },
-    { title: "Designation", dataIndex: "designation", align: "center" },
+    { title: "Name", dataIndex: "name", align: "center" , responsive: ["md"],},
+    { title: "Father Name", dataIndex: "fatherName", align: "center" , responsive: ["md"],},
+    { title: "Contact", dataIndex: "contact", align: "center" , responsive: ["md"],},
+    { 
+      title: "Designation", 
+      dataIndex: ["designation", "name"],
+      align: "center", 
+      responsive: ["md"],
+    },
+    {
+      title: "Name",
+      align: "center",
+      responsive: ["xs"],
+      render: (text, record) => (
+        <div>
+          <span>{record.name}</span> 
+          <span style={{marginLeft:'3px', marginRight:'3px'}}>-</span>
+          <span>{record.designation?.name || ''}</span>
+        </div>
+      ),
+    },
     { title: "Status", dataIndex: "status", align: "center" },
     { title: "Salary", dataIndex: "salary", align: "center" },
     {
@@ -200,13 +236,14 @@ const Staff = () => {
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
       responsive: ["md"],
     },
-    {
-      title: "Date of Leave",
-      dataIndex: "dateOfLeave",
-      align: "center",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
-      responsive: ["md"],
-    },
+    // {
+    //   title: "Date of Leave",
+    //   dataIndex: "dateOfLeave",
+    //   align: "center",
+    //   render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
+    //   responsive: ["md"],
+    // },
+    { title: "Other Details", dataIndex: "otherDetails", align: "center" , responsive: ["md"],},
     {
       title: "Actions",
       align: "center",
@@ -231,6 +268,7 @@ const Staff = () => {
                   setEditingStaff(record);
                   form.setFieldsValue({
                     ...record,
+                    designation: record.designation?._id, // Set the ID for the Select dropdown
                     joiningDate: record.joiningDate ? dayjs(record.joiningDate) : null,
                     dateOfLeave: record.dateOfLeave ? dayjs(record.dateOfLeave) : null,
                   });
@@ -291,18 +329,19 @@ const Staff = () => {
             {statusOptions.map((opt) => (
               <Option key={opt.value} value={opt.value}>
                 {opt.label}
-                </Option>
+              </Option>
             ))}
           </Select>
         </div>
-
+      <div className="transaction-table-wrapper">
         <Table
-         dataSource={staff} 
-         columns={columns} 
-         rowKey="_id" 
-         loading={loading} 
-         pagination={{ pageSize: 7 }} 
-         />
+          dataSource={staff} 
+          columns={columns} 
+          rowKey="_id" 
+          loading={loading} 
+          pagination={{ pageSize: 7 }} 
+        />
+        </div>
       </div>
 
       {/* Edit/Add Modal */}
@@ -333,8 +372,15 @@ const Staff = () => {
           <Form.Item name="contact" label="Contact">
             <Input />
           </Form.Item>
+          {/* UPDATED: Designation dropdown from Category model */}
           <Form.Item name="designation" label="Designation">
-            <Input />
+            <Select placeholder="Select Designation" allowClear>
+              {categories.filter(cat => cat.status === 1).map((cat) => (
+                <Option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item name="salary" label="Salary" rules={[{ required: true }]}>
             <Input type="number" />
@@ -351,8 +397,11 @@ const Staff = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="dateOfLeave" label="Date of Leave">
+          {/* <Form.Item name="dateOfLeave" label="Date of Leave">
             <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
+          </Form.Item> */}
+          <Form.Item name="otherDetails" label="Other Details">
+            <Input.TextArea rows={2} placeholder="" />
           </Form.Item>
         </Form>
       </Modal>

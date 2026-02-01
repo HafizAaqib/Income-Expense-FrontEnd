@@ -30,6 +30,8 @@ import {
   FileDoneOutlined,
   DotChartOutlined,
   CarryOutOutlined,
+  ClusterOutlined,
+  ReadOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import "./Sidebar.css";
@@ -146,21 +148,21 @@ const Sidebar = () => {
                 }}
               >
                 <div>
-                  <img
+                 <img
                     src={ 
                       CONFIG.SOFTWARE_TYPE === "Masjid"
                         ? logoMasjid
                         : CONFIG.SOFTWARE_TYPE === "ECom"
                         ? logoEcom
                         : logoSchool
-                      }
+                    }
                     alt="Logo"
                     style={{
                       height: "85px",
                       borderRadius: "15%",
                       marginTop: "5px",
                     }}
-                    className="object-contain rounded-full "
+                    className="logo-animation"
                   />
                 </div>
                 <div style={{ paddingLeft: "0px", paddingRight: "25px" }}>
@@ -318,6 +320,14 @@ const Sidebar = () => {
               )}
 
               {AllowedPages && AllowedPages.find((x) => x == "students") && (
+                <>
+                <NavLink
+                    to="/student-classes"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <ReadOutlined /> Classes
+                  </NavLink>
                 <NavLink
                   to="/student-checklist"
                   className="nav-link-gradient nav-link-child text-white"
@@ -325,8 +335,17 @@ const Sidebar = () => {
                 >
                   <OrderedListOutlined /> Student Checklist Items
                 </NavLink>
+                </>
               )}
               {AllowedPages && AllowedPages.find((x) => x == "staff") && (
+                <>
+                <NavLink
+                    to="/staff-designations"
+                    className="nav-link-gradient nav-link-child text-white"
+                    onClick={autoCollapse}
+                  >
+                    <ClusterOutlined /> Staff Designations
+                  </NavLink>
                 <NavLink
                   to="/staff-checklist"
                   className="nav-link-gradient nav-link-child text-white"
@@ -334,6 +353,9 @@ const Sidebar = () => {
                 >
                   <UnorderedListOutlined /> Staff Checklist Items
                 </NavLink>
+                
+                  </>
+                
               )}
             </div>
           )}

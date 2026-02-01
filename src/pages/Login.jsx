@@ -65,7 +65,7 @@ const Login = () => {
       <div className="login-wrapper d-flex align-items-center justify-content-center">
         {/* <div className="login-box shadow p-4 rounded bg-white d-flex align-items-center justify-content-center flex-direction-column">
 */}{/* height : 317px */}{/*
-  <h2 className="text-center text-success mb-4">Income & Expense Management</h2>
+  <h2 className="text-center text-success mb-4">Management Software</h2>
   <img src='../public/icons8-cash-96.png'></img>
 </div> */}
         <div className="login-box shadow p-4 rounded bg-white">

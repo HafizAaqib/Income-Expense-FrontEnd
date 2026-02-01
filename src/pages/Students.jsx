@@ -21,7 +21,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
-import { CONFIG } from "./clientConfig"; // Ensure this is available
+import { CONFIG } from "./clientConfig";
 
 const { Option } = Select;
 
@@ -35,6 +35,7 @@ const statusOptions = [
 
 const Students = () => {
   const [students, setStudents] = useState([]);
+  const [categories, setCategories] = useState([]); // NEW: For Classes
   const [loading, setLoading] = useState(false);
   const [messageApi, msgContextHolder] = message.useMessage();
 
@@ -43,7 +44,6 @@ const Students = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   
-  // Image states
   const [viewStudent, setViewStudent] = useState(null);
   const [imagesModalVisible, setImagesModalVisible] = useState(false);
   const [isDataUploading, setIsDataUploading] = useState(false);
@@ -56,6 +56,21 @@ const Students = () => {
   const isAdmin = savedUser?.isAdmin;
   const canAddData = savedUser?.canAddData;
   const canUpdateData = savedUser?.canUpdateData;
+
+  const getCategories = async () => {
+    try {
+      const API = import.meta.env.VITE_API_BASE_URL;
+      let url = `${API}/categories?type=student`; // Assuming type 'student' is used for classes
+      if (selectedEntity) url += `&entity=${selectedEntity.EntityId}`;
+
+      const res = await axios.get(url, {
+        headers: { "X-Client": window.location.hostname.split(".")[0] },
+      });
+      setCategories(res.data.categories || []);
+    } catch (err) {
+      console.error("Failed to fetch classes");
+    }
+  };
 
   const getStudents = async () => {
     setLoading(true);
@@ -73,7 +88,6 @@ const Students = () => {
 
       setStudents(res.data.students);
       
-      // Update the viewStudent reference if it's currently open to refresh images
       if (viewStudent) {
         const updated = res.data.students.find(s => s._id === viewStudent._id);
         if (updated) setViewStudent(updated);
@@ -86,6 +100,7 @@ const Students = () => {
 
   useEffect(() => {
     getStudents();
+    getCategories(); 
   }, [filters]);
 
   const handleSave = async () => {
@@ -138,7 +153,7 @@ const Students = () => {
     }
   };
 
-  // Cloudinary Upload Logic
+    // Cloudinary Upload Logic
   const UploadNewImageOnline = async (student) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -185,7 +200,6 @@ const Students = () => {
     input.click();
   };
 
-  // Delete Individual Image Logic
   const deleteImage = async (publicId) => {
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
@@ -203,6 +217,12 @@ const Students = () => {
     { title: "Name", dataIndex: "name", align: "center" },
     { title: "Father Name", dataIndex: "fatherName", align: "center", responsive: ['md'] },
     { title: "Contact", dataIndex: "contact", align: "center", responsive: ['md'] },
+    { 
+      title: "Class", 
+      dataIndex: ["class", "name"],
+      align: "center", 
+      responsive: ['md'] 
+    },
     { title: "Status", dataIndex: "status", align: "center" },
     { title: "Monthly Fee", dataIndex: "monthlyFee", align: "center" },
     {
@@ -212,13 +232,14 @@ const Students = () => {
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
       responsive: ['md'],
     },
-    {
-      title: "Date of Leave",
-      dataIndex: "dateOfLeave",
-      align: "center",
-      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
-      responsive: ['md'],
-    },
+    // {
+    //   title: "Date of Leave",
+    //   dataIndex: "dateOfLeave",
+    //   align: "center",
+    //   render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
+    //   responsive: ['md'],
+    // },
+    { title: "Other Details", dataIndex: "otherDetails", align: "center" , responsive: ["md"],},
     {
       title: "Actions",
       align: "center",
@@ -243,12 +264,9 @@ const Students = () => {
                   setEditingStudent(record);
                   form.setFieldsValue({
                     ...record,
-                    admissionDate: record.admissionDate
-                     ? dayjs(record.admissionDate)
-                      : null,
-                    dateOfLeave: record.dateOfLeave
-                     ? dayjs(record.dateOfLeave)
-                      : null,
+                    class: record.class?._id, // Set ID for Select dropdown
+                    admissionDate: record.admissionDate ? dayjs(record.admissionDate) : null,
+                    dateOfLeave: record.dateOfLeave ? dayjs(record.dateOfLeave) : null,
                   });
                   setIsModalOpen(true);
                 }}
@@ -313,18 +331,20 @@ const Students = () => {
             {statusOptions.map((opt) => (
               <Option key={opt.value} value={opt.value}>
                 {opt.label}
-                </Option>
+              </Option>
             ))}
           </Select>
         </div>
 
-        <Table
-          dataSource={students}
-          columns={columns}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 7 }}
-        />
+        <div className="transaction-table-wrapper">
+          <Table
+            dataSource={students}
+            columns={columns}
+            rowKey="_id"
+            loading={loading}
+            pagination={{ pageSize: 7 }}
+          />
+        </div>
       </div>
 
       {/* Main Student Add/Edit Modal */}
@@ -337,9 +357,9 @@ const Students = () => {
       >
         <Form form={form} 
          layout="horizontal"
-                        labelCol={{ span: 6 }}
-                        wrapperCol={{ span: 18 }}
-                        style={{ maxWidth: '100%' }}>
+         labelCol={{ span: 6 }}
+         wrapperCol={{ span: 18 }}
+         style={{ maxWidth: '100%' }}>
           <Form.Item
             name="name"
             label="Name"
@@ -352,6 +372,15 @@ const Students = () => {
           </Form.Item>
           <Form.Item name="contact" label="Contact">
             <Input />
+          </Form.Item>
+          <Form.Item name="class" label="Class">
+            <Select placeholder="Select Class" allowClear>
+              {categories.filter(cat => cat.status === 1).map((cat) => (
+                <Option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item name="monthlyFee" label="Monthly Fee">
             <Input type="number" />
@@ -368,13 +397,16 @@ const Students = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="dateOfLeave" label="Date of Leave">
+          {/* <Form.Item name="dateOfLeave" label="Date of Leave">
             <DatePicker style={{ width: "100%" }} format="DD - MMM - YYYY"/>
+          </Form.Item> */}
+          <Form.Item name="otherDetails" label="Other Details">
+            <Input.TextArea rows={2} placeholder="" />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* NEW: Document Viewer and Upload Modal */}
+      {/* Document Viewer and Upload Modal */}
       <Modal
         title={`Documents: ${viewStudent?.name || ''}`}
         open={imagesModalVisible}
